@@ -1,7 +1,7 @@
 """Prepare the template once: .xls (password-less Excel protection is handled by LibreOffice)
 -> vorlage.xlsx -> vorlage-leer.xlsx (input cells emptied).
 
-    python -m app.setup_template "/data/vorlage/20250105 Muster.xls"
+    python -m app.setup_template "20250105 Muster.xls"
 """
 
 from __future__ import annotations

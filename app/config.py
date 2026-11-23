@@ -1,4 +1,4 @@
-"""Settings from environment variables (see docker-compose.yml)."""
+"""Settings from environment variables - the desktop launcher (desktop/launcher.py) sets them."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ import os
 import shutil
 from pathlib import Path
 
-DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
+DATA_DIR = Path(os.environ.get("DATA_DIR") or Path.home() / "Documents" / "Dotationslisten")
 
-try:  # repo root (Docker, development) or the bundle's resources (Mac/Windows app)
+try:  # repo root (development) or the bundle's resources (Mac/Windows app)
     VERSION = (Path(__file__).resolve().parent.parent / "VERSION").read_text("utf-8").strip()
 except OSError:
     VERSION = "dev"
@@ -33,7 +33,7 @@ UPDATE_PAGE = f"https://github.com/{UPDATE_REPO}/releases/latest"
 
 # Recognition: "ollama" or "none" (manual entry only)
 RECOGNIZER = os.environ.get("RECOGNIZER", "ollama")
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5vl:7b")
 # CPU inference takes minutes per page
 OLLAMA_TIMEOUT = float(os.environ.get("OLLAMA_TIMEOUT", "1800"))
@@ -44,7 +44,7 @@ SCAN_DPI = int(os.environ.get("SCAN_DPI", "200"))
 SCAN_SUFFIXES = {".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 
 # External programs. The desktop apps set TESSERACT (bundled) and find LibreOffice in its default
-# install folder (a Finder/Explorer-launched app has no useful PATH). Docker: on the PATH.
+# install folder (a Finder/Explorer-launched app has no useful PATH), otherwise the PATH.
 # LibreOffice is optional: only .xls files need it - the sums are calculated by app/formulas.py.
 _SOFFICE_KNOWN = ("/Applications/LibreOffice.app/Contents/MacOS/soffice",
                   str(Path.home() / "Applications/LibreOffice.app/Contents/MacOS/soffice"),

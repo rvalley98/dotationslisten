@@ -90,7 +90,7 @@ def _status() -> dict[str, Any]:
     return {"template": C.VORLAGE_LEER.exists(), "recog_ok": ok, "recog_msg": msg,
             "recog_enabled": rec.enabled, "busy": w.busy if w else None,
             "soffice": C.soffice_available(), "ollama": ollama, "model": C.OLLAMA_MODEL, "pull": pull,
-            "new_release": updates.info(), "docker": C.DATA_DIR == Path("/data")}
+            "new_release": updates.info()}
 
 
 # Download of the recognition model through Ollama (several GB, runs in the background)

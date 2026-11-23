@@ -3,111 +3,101 @@
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-unterst%C3%BCtzen-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/rvalley98)
 
 Handschriftlich ausgefüllte Abrechnungsformulare (Ausdrucke der Excel-Vorlage) scannen →
-Werte prüfen → die Vorlage wird befüllt, Excel rechnet mit den eigenen Formeln.
-Läuft komplett lokal: als Mac-/Windows-App oder per Docker auf einem Homeserver.
+Werte prüfen → die Vorlage wird befüllt; dazu der Verwendungsnachweis des Jahres.
+Eine installierbare App für Mac und Windows, die komplett auf dem eigenen Rechner läuft.
+
+## Installation
+
+Download unter [Releases](../../releases/latest):
+
+- **Mac** (Apple-Chip, ab macOS 13): `Dotationslisten-<Version>.dmg` öffnen, App in „Programme“
+  ziehen. Beim ersten Start: Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“.
+- **Windows** (10/11, 64 Bit): `Dotationslisten-Setup-<Version>.exe` ausführen, keine
+  Administratorrechte nötig. SmartScreen: „Weitere Informationen“ → „Trotzdem ausführen“.
+
+Ausführliche Anleitungen für Nutzer: [macos/INSTALLATION.txt](macos/INSTALLATION.txt),
+[windows/INSTALLATION.txt](windows/INSTALLATION.txt) (liegen auch DMG bzw. Setup bei).
+
+Die App sitzt in der Menüleiste bzw. im Infobereich der Taskleiste und öffnet ihre Oberfläche im
+Browser unter http://127.0.0.1:8765 – nur auf diesem Rechner erreichbar, ohne Login (in den
+Daten stehen Namen und IBANs). Gibt es eine neue Version, zeigt die App oben einen Hinweis.
+
+Optional, kostenlos:
+- [Ollama](https://ollama.com/download) für die Handschrifterkennung (Modell per Knopf in der
+  App, ca. 6 GB). Ohne Ollama werden die Werte von Hand eingetragen.
+- [LibreOffice](https://de.libreoffice.org/download/download/) nur, um .xls-Dateien direkt
+  einzulesen. Die Summen rechnet die App selbst (`app/formulas.py`); die erzeugten Dateien
+  öffnen Excel und LibreOffice gleichermaßen.
 
 ## Ablauf
 
-1. Scanner legt PDFs per SMB in `data/eingang/` ab (oder Upload auf der Startseite).
-2. Der Server liest die Datei ein, sobald sie fertig geschrieben ist:
-   Seiten trennen, Leerseiten (Duplex-Rückseiten) überspringen, gedrehte Seiten aufrichten,
-   Blatt am **gedruckten** Titel erkennen (Tesseract). Original → `data/archiv/`.
+1. Einmalig die Vorlage hochladen (Startseite).
+2. Scans als PDF hochladen oder vom Scanner in den Ordner `eingang` im Datenordner legen
+   lassen. Die App trennt die Seiten, überspringt Leerseiten, richtet gedrehte Seiten auf und
+   erkennt das Blatt am **gedruckten** Titel (Tesseract). Original → `archiv`.
    Ein Stapel mit mehreren Abrechnungsbögen ergibt mehrere Vorgänge.
-3. Erkennung der Handschrift mit einem lokalen Bildmodell über Ollama (optional, siehe unten).
+3. Handschrift erkennen lassen (Ollama) oder von Hand eintragen.
 4. Prüfseite: Scan links, Felder rechts. Rot = passt nicht (Datum, IBAN-Prüfziffer,
-   Gliederungsnummer nicht in der Liste, ja/nein …). Speichern = geprüft.
-5. „Excel erzeugen“ → `data/ausgang/<Datum> <Thema> (...).xlsx`.
+   Gliederungsnummer, ja/nein …). Speichern = geprüft.
+5. „Excel erzeugen“ → `ausgang/<Datum> <Thema> (...).xlsx`.
 
-Ohne Erkennung funktioniert alles genauso – die Felder werden dann von Hand eingetragen.
+Außerdem: Abrechnungen ganz von Hand anlegen, bestehende Excel-Abrechnungen importieren, alle
+Excel-Dateien auf einmal erzeugen.
 
-## Mac- und Windows-App
+### Daten
 
-Eigenständige Apps ohne Docker: Mac mit Apple-Chip ab macOS 13, Windows 10/11 (64 Bit).
-Enthalten Python, die App und Tesseract. Die Summen (Abrechnung, Verwendungsnachweis) rechnet
-die App selbst (`app/formulas.py`) – weder Excel noch LibreOffice nötig; die erzeugten Dateien
-öffnen Excel und LibreOffice gleichermaßen (sie rechnen beim Öffnen neu). LibreOffice braucht es
-nur, um .xls-Dateien direkt einzulesen; Ollama (Handschrift) ist optional.
+`Dokumente/Dotationslisten` (Windows: liegt „Dokumente“ in OneDrive, dann
+`%USERPROFILE%\Dotationslisten`, damit nichts ungefragt in die Cloud geht). Über das Menü
+änderbar, z. B. auf ein NAS. Jeder Vorgang ist ein Ordner mit `job.json` und den Seitenbildern
+unter `arbeit/` – bitte regelmäßig sichern. Protokoll: `~/Library/Logs/Dotationslisten/app.log`
+bzw. `%LOCALAPPDATA%\Dotationslisten\Logs\app.log`.
 
-- Oberfläche im Browser unter http://127.0.0.1:8765 (nur lokal), Menüleisten- bzw.
-  Taskleisten-Symbol (`desktop/launcher.py`). Version unten auf jeder Seite.
-- Daten: `Dokumente/Dotationslisten` (Windows: liegt „Dokumente“ in OneDrive, dann
-  `%USERPROFILE%\Dotationslisten`), über das Menü änderbar (z. B. NAS).
-- Protokoll: `~/Library/Logs/Dotationslisten/app.log` bzw. `%LOCALAPPDATA%\Dotationslisten\Logs`.
-- Nicht signiert/notarisiert: macOS → Systemeinstellungen → Datenschutz & Sicherheit →
-  „Dennoch öffnen“; Windows → SmartScreen „Weitere Informationen“ → „Trotzdem ausführen“.
-  Nutzer-Anleitungen: `macos/INSTALLATION.txt`, `windows/INSTALLATION.txt`.
+Scanner: den Ordner `eingang` freigeben (bzw. auf dem NAS anlegen und den Datenordner dorthin
+legen) und im Scanner als „Scan to Folder“-Ziel eintragen. Neue Dateien werden eingelesen, sobald
+sie fertig geschrieben sind.
 
-**Bauen** – automatisch über GitHub Actions (`.github/workflows/build.yml`): Tests bei jedem Push;
-Mac-DMG und Windows-Setup bei einem Versions-Tag (`git tag v1.0.1 && git push --tags` → Release
-mit beiden Dateien) oder von Hand (Actions → Build → Run workflow → Artefakte). Beide Builds
-starten die fertige App und lesen einen Test-Scan ein (`desktop/smoke_test.py`).
-
-Lokal:
-- Mac: `macos/build_app.sh` (Xcode-Befehlszeilenwerkzeuge, `brew install cmake uv`).
-  Tesseract wird selbst kompiliert (`macos/build_tesseract.sh`, statisch, macOS ≥ 13).
-- Windows: `windows\build_windows.ps1` (Python 3.12, Tesseract der UB Mannheim, Inno Setup 6).
-- Versionsnummer in `VERSION`. Lizenztexte der mitgelieferten Komponenten sammelt
-  `desktop/collect_licenses.py` (siehe `THIRD_PARTY_NOTICES.md`).
-
-Tests nativ (wie in der Mac-App):
-
-```sh
-DATA_DIR=$PWD/data TESSERACT=$PWD/macos/build/tesseract/bin/tesseract \
-TESSDATA_PREFIX=$PWD/macos/build/tesseract/tessdata macos/build/venv/bin/python -m pytest -q tests
-```
-
-## Verwendungsnachweis
+### Verwendungsnachweis
 
 Die Datei des Jahres („Anlage 3 – Verwendungsnachweis mit Raumkosten“, wie bisher ausgefüllt)
 wird hochgeladen und bleibt unverändert; die App schreibt sie mit den fertigen Vorgängen in eine
-neue Datei. Zuwendung (Anteil der Gliederung) und Mindestanteil Ausbildung + Übung sind in der App
-einstellbar. Die Zellpositionen sind die dieses Formulars; beim Hochladen wird der Aufbau geprüft,
-ein anderes Formular wird abgelehnt.
-
-## Installation auf dem Server
-
-```sh
-git clone <repo> dotationslisten && cd dotationslisten
-docker compose up -d --build        # Image wird auf dem Server gebaut (amd64)
-```
-
-Dann `http://<server>:8000` öffnen und einmalig die Vorlage („20250105 Muster.xls“) hochladen.
-Alternativ: `docker compose exec app python -m app.setup_template "/data/vorlage/Muster.xls"`.
-
-**Nur im Heimnetz betreiben.** Die Oberfläche hat kein Login, in den Daten stehen Namen und
-IBANs. Port 8000 nicht im Router freigeben.
-
-### Scanner-Ordner (SMB)
-
-`data/eingang` auf dem Server als SMB-Freigabe einrichten (Samba des Betriebssystems bzw. die
-Freigabe-Funktion von NAS/Unraid/OMV) und im Scanner als „Scan to Folder“-Ziel eintragen.
-Der Container läuft als root und kann die Dateien lesen und verschieben.
-Ältere Scanner können teils nur SMB1 – dann in Samba `server min protocol = NT1` nur für diese
-Freigabe bzw. so eng wie möglich erlauben.
-
-### Erkennung
-
-Einstellung über `.env` neben der `docker-compose.yml`:
-
-| Variante | `.env` | Hinweis |
-|---|---|---|
-| keine (Handeingabe) | `RECOGNIZER=none` | |
-| auf dem Server (CPU) | – (Standard) und `docker compose --profile ollama up -d`, dann `docker compose exec ollama ollama pull qwen2.5vl:3b` + `OLLAMA_MODEL=qwen2.5vl:3b` | langsam (Minuten pro Seite), läuft nebenbei |
-| auf dem Mac | `OLLAMA_URL=http://<mac>:11434` | Ollama auf dem Mac mit `OLLAMA_HOST=0.0.0.0` starten, damit es im LAN lauscht. Scans gehen dann unverschlüsselt durchs Heimnetz. |
-
-Ist Ollama nicht erreichbar (Mac aus), warten die Seiten und werden erkannt, sobald es wieder
-da ist. Wer eine Seite schon von Hand gespeichert hat, wird nicht mehr überschrieben.
+neue Datei und zeigt die Aufteilung der Verwendung. Zuwendung (Anteil der Gliederung) und
+Mindestanteil Ausbildung + Übung sind einstellbar. Die Zellpositionen sind die dieses Formulars;
+beim Hochladen wird der Aufbau geprüft, ein anderes Formular wird abgelehnt.
 
 ## Entwicklung
 
+Python 3.12. Die App ist FastAPI + Jinja2 (`app/`), gestartet vom Desktop-Launcher
+(`desktop/launcher.py`: Server auf 127.0.0.1, Menüleiste/Taskleiste, Datenordner).
+
 ```sh
-docker build -t dotationslisten:dev .
-docker run --rm -v $PWD:/srv -v $PWD/data:/data -w /srv dotationslisten:dev python -m pytest -q tests
+uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt rumps   # Windows: pystray
+DATA_DIR=$PWD/data .venv/bin/python desktop/launcher.py
 ```
 
-Viele Tests brauchen `data/vorlage/vorlage.xlsx` und `data/verwendungsnachweis/original.xlsx`
-(nicht im Repository) und werden sonst übersprungen. `app/fields.py` ist
-die Feldkarte aller Eingabezellen; ein Test prüft sie gegen die freigegebenen Zellen der Vorlage.
+Tests: `DATA_DIR=$PWD/data python -m pytest -q`. Viele Tests brauchen die Vorlage
+(`data/vorlage/vorlage.xlsx`, entsteht beim Hochladen) und `data/verwendungsnachweis/original.xlsx`
+– beide nicht im Repository – und werden sonst übersprungen. Für die Erkennungs-Tests ein
+Tesseract mit deutschen Sprachdaten (`TESSERACT`, `TESSDATA_PREFIX`, z. B. aus `macos/build`).
+`app/fields.py` ist die Feldkarte aller Eingabezellen; ein Test prüft sie gegen die Vorlage.
+
+### Bauen und veröffentlichen
+
+GitHub Actions (`.github/workflows/build.yml`): Tests bei jedem Push. Bei einem Versions-Tag
+werden Mac-DMG und Windows-Setup gebaut, gestartet und mit einem Test-Scan geprüft
+(`desktop/smoke_test.py`), dann als Release veröffentlicht:
+
+```sh
+echo 1.2.0 > VERSION && git commit -am "Version 1.2.0" && git tag v1.2.0 && git push && git push --tags
+```
+
+Lokal:
+- Mac: `macos/build_app.sh` (Xcode-Befehlszeilenwerkzeuge, `brew install cmake uv`).
+  Tesseract wird selbst kompiliert (`macos/build_tesseract.sh`, statisch, macOS ≥ 13) –
+  Homebrew-Programme laufen nur auf dem macOS, für das sie gebaut wurden.
+- Windows: `windows\build_windows.ps1` (Python 3.12, Tesseract der UB Mannheim, Inno Setup 6).
+
+Die Apps sind nicht signiert bzw. notarisiert (kein Apple-Developer-Konto, kein
+Code-Signing-Zertifikat) – daher die Warnungen beim ersten Start.
 
 ## Lizenz
 

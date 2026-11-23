@@ -7,7 +7,8 @@ os.environ.setdefault("UPDATE_CHECK", "0")  # no requests to GitHub from the tes
 
 from app import config as C  # noqa: E402
 
-DATA = Path(os.environ.get("DATA_DIR", "/data"))
+# the template and the Verwendungsnachweis are not in the repository: put them into data/ (or set DATA_DIR)
+DATA = Path(os.environ.get("DATA_DIR") or Path(__file__).resolve().parent.parent / "data")
 
 
 @pytest.fixture(scope="session")
