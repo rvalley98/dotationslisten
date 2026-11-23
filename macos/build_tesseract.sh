@@ -23,7 +23,7 @@ CMAKE_COMMON=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET="$MACOS_M
               -DCMAKE_POLICY_VERSION_MINIMUM=3.5)
 
 fetch() {  # url file
-    [ -f "$WORK/$2" ] || curl -fsSL "$1" -o "$WORK/$2"
+    [ -f "$WORK/$2" ] || curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors "$1" -o "$WORK/$2"
 }
 
 fetch "https://download.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz" libpng.tar.gz
@@ -60,7 +60,7 @@ cp -R "$WORK/tesseract/tessdata/configs" "$WORK/tesseract/tessdata/tessconfigs" 
 # language data: German (titles, labels) and orientation detection - same files as Debian's packages
 for lang in deu osd; do
     [ -f "$OUT/tessdata/$lang.traineddata" ] || \
-        curl -fsSL "https://github.com/tesseract-ocr/tessdata/raw/main/$lang.traineddata" -o "$OUT/tessdata/$lang.traineddata"
+        curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors "https://github.com/tesseract-ocr/tessdata/raw/main/$lang.traineddata" -o "$OUT/tessdata/$lang.traineddata"
 done
 
 echo "Abhängigkeiten:"; otool -L "$OUT/bin/tesseract" | tail -n +2

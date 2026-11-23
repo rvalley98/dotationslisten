@@ -13,6 +13,13 @@ $Dist = Join-Path $Here "dist"
 $Version = (Get-Content (Join-Path $Root "VERSION") -Raw).Trim()
 New-Item -ItemType Directory -Force $Build | Out-Null
 
+function Download { param([string]$Url, [string]$OutFile)
+    # GitHub answers 503 now and then - retry before failing the build
+    for ($i = 1; ; $i++) {
+        try { Invoke-WebRequest $Url -OutFile $OutFile -UseBasicParsing; return }
+        catch { if ($i -ge 5) { throw }; Write-Host "Download fehlgeschlagen ($i/5), neuer Versuch: $Url"; Start-Sleep -Seconds (10 * $i) }
+    }
+}
 function Run { param([string]$Exe, [string[]]$ArgList)
     & $Exe @ArgList
     if ($LASTEXITCODE -ne 0) { throw "$Exe $($ArgList -join ' ') fehlgeschlagen ($LASTEXITCODE)" }
@@ -30,12 +37,12 @@ if (-not (Test-Path (Join-Path $Tess "tesseract.exe"))) {
     Get-ChildItem $Tess -Filter *.exe | Where-Object { $_.Name -ne "tesseract.exe" } | Remove-Item
     foreach ($d in "configs", "tessconfigs") { if (Test-Path "$Installed\tessdata\$d") { Copy-Item -Recurse "$Installed\tessdata\$d" "$Tess\tessdata\" } }
     foreach ($lang in "deu", "osd") {
-        Invoke-WebRequest "https://github.com/tesseract-ocr/tessdata/raw/main/$lang.traineddata" -OutFile "$Tess\tessdata\$lang.traineddata"
+        Download "https://github.com/tesseract-ocr/tessdata/raw/main/$lang.traineddata" "$Tess\tessdata\$lang.traineddata"
     }
     if (Test-Path "$Installed\doc\LICENSE") { Copy-Item "$Installed\doc\LICENSE" "$Build\tesseract-LICENSE.txt" }
 }
 if (-not (Test-Path "$Build\tesseract-LICENSE.txt")) {
-    Invoke-WebRequest "https://raw.githubusercontent.com/tesseract-ocr/tesseract/main/LICENSE" -OutFile "$Build\tesseract-LICENSE.txt"
+    Download "https://raw.githubusercontent.com/tesseract-ocr/tesseract/main/LICENSE" "$Build\tesseract-LICENSE.txt"
 }
 Run "$Tess\tesseract.exe" @("--version")
 
