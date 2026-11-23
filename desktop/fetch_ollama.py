@@ -106,7 +106,7 @@ def main() -> None:
     src.mkdir(parents=True, exist_ok=True)
     archive = src / f"{VERSION}-{name}"
     if not archive.exists() or sha256(archive) != digest:
-        print(f"Lade Ollama {VERSION} ({name}) …")
+        print(f"Lade Ollama {VERSION} ({name}) ...")
         download(BASE + name, archive)
     if sha256(archive) != digest:
         archive.unlink()
