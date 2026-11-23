@@ -3,7 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from app import config as C
+os.environ.setdefault("UPDATE_CHECK", "0")  # no requests to GitHub from the tests
+
+from app import config as C  # noqa: E402
 
 DATA = Path(os.environ.get("DATA_DIR", "/data"))
 

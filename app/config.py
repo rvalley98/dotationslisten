@@ -25,6 +25,12 @@ VN_BASIS = VN_DIR / "basis.xlsx"    # the year's Verwendungsnachweis as filled s
 VN_STAND = VN_DIR / "stand.json"    # result of the last calculation
 VN_SETTINGS = VN_DIR / "einstellungen.json"  # Zuwendung / Mindestanteil set in the app
 
+# Notice about new releases (GitHub releases API, once a day)
+UPDATE_CHECK = os.environ.get("UPDATE_CHECK", "1") != "0"
+UPDATE_REPO = os.environ.get("UPDATE_REPO", "rvalley98/dotationslisten")
+UPDATE_URL = f"https://api.github.com/repos/{UPDATE_REPO}/releases/latest"
+UPDATE_PAGE = f"https://github.com/{UPDATE_REPO}/releases/latest"
+
 # Recognition: "ollama" or "none" (manual entry only)
 RECOGNIZER = os.environ.get("RECOGNIZER", "ollama")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")

@@ -27,6 +27,7 @@ from . import jobs as J
 from . import importer
 from . import pages as P
 from . import rules
+from . import updates
 from . import verwendungsnachweis as VN
 from . import workbook as W
 from .recognize import from_config
@@ -41,6 +42,7 @@ state: dict[str, Any] = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     C.ensure_dirs()
+    updates.start()
     rec = from_config()
     state["recognizer"] = rec
     if os.environ.get("WORKER", "1") == "1":
@@ -87,7 +89,8 @@ def _status() -> dict[str, Any]:
     ollama = "ok" if ok else ("modell" if "fehlt" in msg else ("offline" if rec.enabled else "aus"))
     return {"template": C.VORLAGE_LEER.exists(), "recog_ok": ok, "recog_msg": msg,
             "recog_enabled": rec.enabled, "busy": w.busy if w else None,
-            "soffice": C.soffice_available(), "ollama": ollama, "model": C.OLLAMA_MODEL, "pull": pull}
+            "soffice": C.soffice_available(), "ollama": ollama, "model": C.OLLAMA_MODEL, "pull": pull,
+            "new_release": updates.info(), "docker": C.DATA_DIR == Path("/data")}
 
 
 # Download of the recognition model through Ollama (several GB, runs in the background)

@@ -49,6 +49,12 @@ button.primary, .btn.primary { background:var(--accent); border-color:var(--acce
   </div>
 </header>
 <main>
+{% if status.new_release %}
+<div class="card small row" style="justify-content:space-between"><span><b>Neue Version {{ status.new_release.version }} verfügbar</b>
+  (installiert: {{ version }}).{% if status.docker %} Aktualisieren: <code>git pull &amp;&amp; docker compose up -d --build</code>{% else %}
+  Herunterladen, die App beenden und die neue Version wie beim ersten Mal installieren – die Daten bleiben erhalten.{% endif %}</span>
+  <a class="btn" href="{{ status.new_release.url }}" target="_blank" rel="noopener">Zum Download</a></div>
+{% endif %}
 {% if not status.soffice and not status.template %}
 <div class="card small"><b>Hinweis:</b> Die Vorlage bitte als .xlsx hochladen. Eine .xls-Vorlage einmal in Excel
   „Speichern unter → Excel-Arbeitsmappe (.xlsx)“ – oder <a href="https://de.libreoffice.org/download/download/" target="_blank" rel="noopener">LibreOffice</a>
