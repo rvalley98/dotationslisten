@@ -1,0 +1,98 @@
+# Tests on every push; the Mac and Windows apps are built for version tags (v1.2.3) and on
+# demand (Actions -> Build -> Run workflow) - macOS/Windows runner minutes cost more.
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-deu tesseract-ocr-osd
+      - run: pip install -r requirements.txt
+      # tests that need the (not committed) Abrechnung template / Verwendungsnachweis are skipped
+      - run: python -m pytest -q -rs
+
+  macos:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: test
+    runs-on: macos-14  # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: brew install cmake
+      - uses: actions/cache@v4
+        with:
+          path: macos/build/tesseract
+          key: tesseract-macos-${{ hashFiles('macos/build_tesseract.sh') }}
+      - uses: actions/cache@v4
+        with:
+          path: macos/build/src
+          key: tesseract-src-${{ hashFiles('macos/build_tesseract.sh') }}
+      - run: macos/build_app.sh
+      - name: Smoke test of the built app
+        run: |
+          export DATA_DIR="$RUNNER_TEMP/data" DOTATIONSLISTEN_NO_BROWSER=1 POLL_SECONDS=1
+          macos/dist/Dotationslisten.app/Contents/MacOS/Dotationslisten > "$RUNNER_TEMP/app.log" 2>&1 &
+          macos/build/venv/bin/python desktop/smoke_test.py "$DATA_DIR" || { cat "$RUNNER_TEMP/app.log" ~/Library/Logs/Dotationslisten/app.log; exit 1; }
+          kill %1 || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: macos/dist/*.dmg
+          if-no-files-found: error
+
+  windows:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: choco install tesseract innosetup -y --no-progress
+      - run: powershell -ExecutionPolicy Bypass -File windows\build_windows.ps1
+      - name: Unit tests on Windows (formulas, rules, paths)
+        run: windows\build\venv\Scripts\python.exe -m pytest -q -rs
+        env:
+          TESSERACT: ${{ github.workspace }}\windows\build\tesseract\tesseract.exe
+          TESSDATA_PREFIX: ${{ github.workspace }}\windows\build\tesseract\tessdata
+      - name: Smoke test of the built app
+        shell: pwsh
+        run: |
+          $env:DATA_DIR = "$env:RUNNER_TEMP\data"; $env:DOTATIONSLISTEN_NO_BROWSER = "1"; $env:POLL_SECONDS = "1"
+          $p = Start-Process windows\dist\Dotationslisten\Dotationslisten.exe -PassThru
+          windows\build\venv\Scripts\python.exe desktop\smoke_test.py $env:DATA_DIR
+          $ok = $LASTEXITCODE
+          if ($ok -ne 0) { Get-Content "$env:LOCALAPPDATA\Dotationslisten\Logs\app.log" -ErrorAction SilentlyContinue }
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+          exit $ok
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: windows/dist/*.exe
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: dist, merge-multiple: true }
+      - run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "Dotationslisten ${GITHUB_REF_NAME#v}" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

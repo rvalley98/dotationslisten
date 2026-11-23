@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block main %}
+<style>
+  .viz { --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a; }
+  @media (prefers-color-scheme: dark) { .viz { --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70; } }
+  .viz-legend { display:flex; flex-wrap:wrap; gap:6px 18px; margin-bottom:8px; }
+  .viz-legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:-1px; }
+  .viz-track { position:relative; height:28px; background:var(--soft); border-radius:4px; }
+  .viz-seg { position:absolute; top:0; bottom:0; box-shadow:inset -2px 0 0 var(--card); }
+  .viz-seg:first-child { border-radius:4px 0 0 4px; }
+  .viz-mark { position:absolute; top:-5px; bottom:-5px; width:2px; margin-left:-1px; background:var(--fg); }
+  .viz-mark::before { content:""; position:absolute; left:-6px; right:-6px; top:0; bottom:0; }
+  .viz-tip { display:none; position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+             white-space:nowrap; background:var(--fg); color:var(--card); padding:4px 8px; border-radius:4px; font-size:12px; z-index:2; }
+  .viz-seg:hover .viz-tip, .viz-seg:focus .viz-tip, .viz-mark:hover .viz-tip, .viz-mark:focus .viz-tip { display:block; }
+  .viz-axis { position:relative; height:2.6em; margin-top:8px; }
+  .viz-axis span { position:absolute; transform:translateX(-50%); white-space:nowrap; }
+  .viz-axis span:nth-child(2) { top:1.3em; }
+</style>
+<div class="card">
+  <h1 style="margin-top:0">Verwendungsnachweis{% if info %} {{ info.jahr }}{% endif %}</h1>
+  {% if info %}
+  <p class="small muted">Grundlage: hochgeladener Verwendungsnachweis ({{ info.gliederung }}, Zuwendung {{ info.zuwendung|eur }},
+    {{ info.zeilen }} Zeilen schon im Kostenblatt, Stand {{ info.geaendert.replace('T', ' ')[:16] }}).
+    Er bleibt unverändert – die App schreibt ihn zusammen mit den fertigen Vorgängen in eine neue Datei.</p>
+  {% else %}
+  <p>Noch kein Verwendungsnachweis hinterlegt. Die Datei des Jahres hochladen (z. B. „Anlage_3 - Verwendungsnachweis mit Raumkosten“), so wie sie bisher ausgefüllt ist.</p>
+  {% endif %}
+  <form method="post" action="/verwendungsnachweis/basis" enctype="multipart/form-data" class="row">
+    <input type="file" name="file" accept=".xlsx" required>
+    <button>{{ 'Ersetzen' if info else 'Hochladen' }}</button>
+  </form>
+  {% if info %}
+  <h3 style="margin:16px 0 6px">Einstellungen</h3>
+  <form method="post" action="/verwendungsnachweis/einstellungen" class="row" style="align-items:flex-end;gap:14px">
+    <label class="small">Zuwendung (Anteil der Gliederung lt. Binnenverteilung)<br>
+      <input name="zuwendung" inputmode="decimal" style="width:12em"
+             value="{{ (settings.zuwendung|eur).replace(' €', '') if settings.zuwendung is not none else '' }}"
+             placeholder="{{ (info.zuwendung|eur) if info.zuwendung is number else 'aus der Datei' }}"></label>
+    <label class="small">Mindestanteil Ausbildung + Übung<br>
+      <input name="mindestanteil" inputmode="decimal" style="width:5em" value="{{ '%g'|format(settings.mindestanteil * 100) }}"> %</label>
+    <button>Speichern</button>
+  </form>
+  <p class="small muted">Zuwendung leer = Wert aus der hochgeladenen Datei ({{ info.zuwendung|eur }}). Die Einstellungen werden beim
+    Berechnen in die neue Datei übernommen (Zelle F20 bzw. die Prüfung „Anteil der Ausbildungen und Übungen“).</p>
+  {% endif %}
+</div>
+
+{% if info %}
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">Berechnung</h2>
+    <form method="post" action="/verwendungsnachweis/berechnen" class="row">
+      <button class="primary">Neu berechnen &amp; Datei erzeugen</button>
+      {% if stand %}<a class="btn" href="/verwendungsnachweis/download">{{ stand.file }}</a>{% endif %}
+    </form>
+  </div>
+  {% if stand %}{% set s = stand.summary %}
+  <p class="small {{ 'warn' if outdated else 'muted' }}">Stand {{ stand.at.replace('T', ' ')[:16] }}{% if outdated %} – seitdem geändert, bitte neu berechnen{% endif %}.
+    {{ stand.written|length }} Vorgang/Vorgänge eingetragen{% if stand.skipped %}, {{ stand.skipped|length }} übersprungen (schon im Kostenblatt){% endif %}. Dauert ein paar Sekunden.</p>
+  <table>
+    <tr><th>Ausgaben lt. Abrechnung</th><th style="text-align:right">Betrag</th><th style="text-align:right">v. H. der Zuwendung</th></tr>
+    <tr><td>Übungen</td><td style="text-align:right">{{ s.uebungen|eur }}</td><td rowspan="2" style="text-align:right;vertical-align:middle">{{ s.anteil_ua|pct }}</td></tr>
+    <tr><td>Ausbildung</td><td style="text-align:right">{{ s.ausbildung|eur }}</td></tr>
+    <tr><td>Verwaltung</td><td style="text-align:right">{{ s.verwaltung|eur }}</td><td style="text-align:right">{{ s.anteil_verwaltung|pct }}</td></tr>
+    <tr><th>Insgesamt</th><th style="text-align:right">{{ s.insgesamt|eur }}</th><td></td></tr>
+    <tr><td class="muted">Zuwendung / Eigenanteil</td><td style="text-align:right" class="muted">{{ s.zuwendung|eur }} / {{ s.eigenanteil|eur }}</td><td></td></tr>
+  </table>
+  {% if chart %}
+  <div class="viz" role="img" aria-label="Aufteilung der Ausgaben: {% for p in chart.parts %}{{ p.label }} {{ p.value|eur }}{{ ', ' if not loop.last }}{% endfor %}">
+    <h3 style="margin:18px 0 6px">Aufteilung der Verwendung</h3>
+    <div class="viz-legend small">
+      {% for p in chart.parts %}<span><i style="background:{{ p.color }}"></i>{{ p.label }} <b>{{ p.value|eur }}</b> <span class="muted">({{ p.share|pct }})</span></span>{% endfor %}
+    </div>
+    <div class="viz-track">
+      {% for p in chart.parts if p.w > 0 %}
+      <div class="viz-seg" style="left:{{ p.x }}%;width:{{ p.w }}%;background:{{ p.color }}" tabindex="0">
+        <span class="viz-tip">{{ p.label }}: {{ p.value|eur }} · {{ p.share|pct }} der Ausgaben</span>
+      </div>
+      {% endfor %}
+      {% for m in chart.marks %}
+      <div class="viz-mark" style="left:{{ m.x }}%" tabindex="0"><span class="viz-tip">{{ m.label }}</span></div>
+      {% endfor %}
+    </div>
+    <div class="viz-axis small muted">
+      {% for m in chart.marks %}<span style="left:{{ m.x }}%;transform:translateX({{ m.shift }})">{{ m.label }}</span>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  <p>
+    <span class="tag {{ 'ok' if s.pruefung_summe == 'i.O.' else 'err' }}">Abgerechnete Summe: {{ s.pruefung_summe }}</span>
+    <span class="tag {{ 'ok' if s.pruefung_anteil == 'i.O.' else 'err' }}">Anteil Ausbildung + Übung ≥ {{ '%g'|format((stand.einstellungen or {}).get('mindestanteil', 0.6) * 100) }} %: {{ s.pruefung_anteil }}</span>
+  </p>
+  {% else %}
+  <p class="small muted">Noch nicht berechnet.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+  <h2 style="margin-top:0">Vorgänge</h2>
+  <p class="small muted">Ins Kostenblatt kommen nur fertige Vorgänge: alle Blätter geprüft und danach „Excel erzeugen“ geklickt. Eine Zeile mit gleichem Datum und Thema, die schon im Kostenblatt steht, wird nicht doppelt eingetragen.</p>
+  {% if rows %}
+  <div style="overflow-x:auto">
+  <table>
+    <tr><th>Datum</th><th>Art</th><th>Thema</th><th>Ort</th><th style="text-align:right">Gesamtkosten</th><th style="text-align:right">Anteil KatS</th><th style="text-align:right">Kosten KatS</th><th>Stand</th></tr>
+    {% for e in rows %}
+    <tr>
+      <td class="small">{{ e.datum|datum }}</td>
+      <td class="small">{{ e.art or '–' }}</td>
+      <td><a href="/vorgang/{{ e.id }}">{{ e.thema or e.title }}</a></td>
+      <td class="small">{{ e.ort or '–' }}</td>
+      <td style="text-align:right">{{ e.gesamt|eur }}</td>
+      <td style="text-align:right">{{ e.anteil|pct }}</td>
+      <td style="text-align:right">{{ e.kats|eur }}</td>
+      <td class="small">
+        {% if e.status == final %}
+          {% if e.id in written %}<span class="tag ok">Zeile {{ written[e.id] }}</span>
+          {% elif e.id in skipped %}<span class="tag">schon im Kostenblatt</span>
+          {% else %}<span class="tag ok">fertig</span>{% endif %}
+        {% else %}<span class="tag warn">{{ e.status }}</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <p class="muted">Noch keine Vorgänge.</p>
+  {% endif %}
+</div>
+{% endblock %}

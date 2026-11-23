@@ -1,0 +1,43 @@
+Dotationslisten – Installation unter Windows
+============================================
+
+Voraussetzung: Windows 10 oder 11 (64 Bit). Administratorrechte sind nicht nötig.
+
+1. „Dotationslisten-Setup-….exe“ starten.
+   Windows zeigt eventuell „Der Computer wurde durch Windows geschützt“ (SmartScreen),
+   weil die App nicht bei Microsoft registriert ist: „Weitere Informationen“ →
+   „Trotzdem ausführen“. Das ist nur einmal nötig.
+
+2. Die App öffnet sich im Browser (http://127.0.0.1:8765). Unten rechts in der Taskleiste
+   erscheint ein kleines rotes Symbol (ggf. unter dem Pfeil ^): darüber öffnen,
+   Datenordner zeigen, beenden. Gestartet wird sie über das Startmenü.
+
+3. Einmalig die Excel-Vorlage hochladen (Startseite) – am besten als .xlsx.
+   Eine .xls-Vorlage in Excel öffnen und „Speichern unter → Excel-Arbeitsmappe (.xlsx)“.
+
+Optional (kostenlos):
+
+- Ollama – Handschrifterkennung auf dem eigenen PC (ohne Ollama werden die Werte von
+  Hand eingetragen): https://ollama.com/download
+  Danach in der App auf „Modell jetzt laden“ klicken (einmalig ca. 6 GB).
+  Empfohlen: mindestens 16 GB Arbeitsspeicher; ohne starke Grafikkarte ist die
+  Erkennung langsam (mehrere Minuten pro Seite).
+- LibreOffice – nur nötig, um .xls-Dateien direkt einzulesen:
+  https://de.libreoffice.org/download/download/
+
+Microsoft Excel und LibreOffice öffnen die erzeugten Dateien gleichermaßen; die Summen
+rechnet die App selbst.
+
+Daten
+-----
+Alle Vorgänge, Scans und erzeugten Excel-Dateien liegen in
+  Dokumente\Dotationslisten
+(liegt „Dokumente“ in OneDrive, dann in C:\Benutzer\<Name>\Dotationslisten, damit
+nichts ungefragt in die Cloud synchronisiert wird). Nichts verlässt den Rechner.
+Der Ordner lässt sich über das Taskleisten-Symbol ändern (z. B. auf ein NAS).
+Bitte regelmäßig sichern. Beim Deinstallieren bleibt der Datenordner erhalten.
+
+Scanner: Den Ordner „eingang“ im Datenordner als Scan-Ziel einrichten – neue PDFs
+werden automatisch eingelesen.
+
+Unterstützen: https://buymeacoffee.com/rvalley98

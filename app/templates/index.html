@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block main %}
+{% if bulk.running %}<meta http-equiv="refresh" content="3">{% endif %}
+{% if not status.template %}
+<div class="card">
+  <h2>Vorlage einrichten</h2>
+  <p class="small muted">Einmalig die Excel-Vorlage (z. B. „20250105 Muster.xls“) hochladen. Die Beispieleinträge des Musters werden entfernt, die Formeln bleiben.</p>
+  <form method="post" action="/vorlage" enctype="multipart/form-data" class="row">
+    <input type="file" name="file" accept=".xls,.xlsx" required>
+    <button class="primary">Vorlage übernehmen</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <h1 style="margin:0">Vorgänge</h1>
+    <form method="post" action="/upload" enctype="multipart/form-data" class="row">
+      <input type="file" name="files" multiple accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff">
+      <button>Scans hochladen</button>
+    </form>
+  </div>
+  <p class="small muted">Scans landen per Scanner im Ordner <code>eingang</code> oder hier per Upload. Mehrere Abrechnungsbögen in einer Datei werden in mehrere Vorgänge geteilt. Die Liste aktualisiert sich nicht von selbst – neu laden.</p>
+  {% if jobs %}
+  <div class="row" style="margin-bottom:10px">
+    <form method="post" action="/excel" class="row" style="margin:0">
+      <span class="small muted">Excel:</span>
+      <button name="mode" value="fehlende" class="small" {{ 'disabled' if bulk.running or not status.template else '' }}>Fehlende erzeugen ({{ missing }})</button>
+      <button name="mode" value="alle" class="small" {{ 'disabled' if bulk.running or not status.template else '' }}>Alle neu erzeugen</button>
+    </form>
+    {% if bulk.running %}
+    <span class="small warn">Erzeuge {{ bulk.done + bulk.errors|length + 1 }} von {{ bulk.total }} … (Seite aktualisiert sich)</span>
+    {% elif bulk.finished %}
+    <span class="small {{ 'err' if bulk.errors else 'ok' }}">{{ bulk.done }} Excel erzeugt{% if bulk.errors %}, {{ bulk.errors|length }} fehlgeschlagen{% endif %}{% if bulk.waiting %}, {{ bulk.waiting }} übersprungen (Erkennung läuft noch){% endif %}.</span>
+    {% endif %}
+  </div>
+  {% if bulk.errors and not bulk.running %}<ul class="small err">{% for e in bulk.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  {% endif %}
+  <details style="margin-bottom:12px" {{ 'open' if last_import.errors else '' }}>
+    <summary class="small" style="cursor:pointer">Bestehende Abrechnungen aus Excel importieren</summary>
+    <form method="post" action="/import" enctype="multipart/form-data" class="row" style="margin-top:8px">
+      <input type="file" name="files" multiple accept=".xlsx,.xls" required>
+      <button class="primary">Importieren</button>
+    </form>
+    <p class="small muted" style="margin:6px 0 0">Ausgefüllte Abrechnungen nach der Vorlage (.xlsx oder .xls, mehrere auf einmal). Die Eingabefelder werden übernommen, die Blätter gelten als geprüft. Danach „Fehlende erzeugen“, damit die Summen für den Verwendungsnachweis berechnet werden. Dieselbe Datei wird nur einmal importiert.</p>
+  </details>
+  {% if last_import.at %}
+  <p class="small {{ 'err' if last_import.errors else 'ok' }}">Import: {{ last_import.ok|length }} übernommen{% if last_import.duplicate %}, {{ last_import.duplicate|length }} schon vorhanden ({{ last_import.duplicate|join(', ') }}){% endif %}{% if last_import.errors %}, {{ last_import.errors|length }} fehlgeschlagen{% endif %}.</p>
+  {% if last_import.errors %}<ul class="small err">{% for e in last_import.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  {% endif %}
+  <details style="margin-bottom:12px">
+    <summary class="small" style="cursor:pointer">Neue Abrechnung ohne Scan von Hand anlegen</summary>
+    <form method="post" action="/neu" style="margin-top:8px">
+      <p class="small muted" style="margin:0 0 6px">Welche Blätter gehören dazu? Weitere lassen sich im Vorgang noch hinzufügen.</p>
+      <div class="row">
+        {% for s in sheets %}
+        <label class="small"><input type="checkbox" name="s:{{ s.key }}" value="1" {{ 'checked' if s.key in default_sheets else '' }} {{ 'checked disabled' if s.key == 'abrechnung' else '' }}> {{ s.name }}</label>
+        {% endfor %}
+      </div>
+      <button class="primary" style="margin-top:8px">Abrechnung anlegen</button>
+    </form>
+  </details>
+  {% if jobs %}
+  <div style="overflow-x:auto">
+  <table>
+    <tr><th>Vorgang</th><th>Eingang</th><th>Seiten</th><th>Stand</th><th>Excel</th></tr>
+    {% for j in jobs %}
+    <tr>
+      <td><a href="/vorgang/{{ j.id }}">{{ j.title }}</a><div class="small muted">{{ j.source }}</div></td>
+      <td class="small">{{ j.created }}</td>
+      <td>{{ j.pages }}</td>
+      <td class="small">
+        {% if j.open %}<span class="tag warn">{{ j.open }} in Erkennung</span>{% endif %}
+        <span class="tag {{ 'ok' if j.sheets and j.reviewed >= j.sheets else '' }}">{{ j.reviewed }}/{{ j.sheets }} geprüft</span>
+      </td>
+      <td class="small">{% if j.export %}<a href="/vorgang/{{ j.id }}/download">herunterladen</a>{% else %}
+        <form method="post" action="/vorgang/{{ j.id }}/export" style="margin:0"><button class="small" {{ '' if status.template else 'disabled' }}>erzeugen</button></form>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <p class="muted">Noch keine Scans.</p>
+  {% endif %}
+</div>
+{% endblock %}

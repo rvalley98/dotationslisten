@@ -1,0 +1,12 @@
+data/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+.env
+.idea/
+.pytest_cache/
+macos/build/
+macos/dist/
+windows/build/
+windows/dist/

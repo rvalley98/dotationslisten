@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} – Dotationslisten{% endblock %}
+{% block main %}
+<style>
+.tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.tabs a { text-decoration:none; padding:5px 10px; border:1px solid var(--line); border-radius:6px; background:var(--card); font-size:13px; }
+.tabs a.cur { border-color:var(--accent); box-shadow:inset 0 -2px 0 var(--accent); }
+.tabs a .s { color:var(--muted); }
+.split { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(0, 1fr); gap:16px; align-items:start; }
+@media (max-width: 1000px) { .split { grid-template-columns:1fr; } }
+.split.noscan { grid-template-columns:minmax(0, 900px); }
+.scan { position:sticky; top:12px; max-height:calc(100vh - 24px); overflow:auto; background:#fff; border:1px solid var(--line); border-radius:8px; }
+.scan img { display:block; width:100%; cursor:zoom-in; }
+.scan.zoom img { width:200%; cursor:zoom-out; }
+.f { margin-bottom:10px; }
+.f label { display:block; font-size:13px; color:var(--muted); margin-bottom:2px; }
+.f .msg, td .msg { font-size:12px; color:var(--err); }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+td input[type=text] { padding:3px 5px; }
+table.t td { padding:3px 4px; border:0; } table.t th { padding:3px 4px; }
+.actions { position:sticky; bottom:0; background:var(--card); padding:10px 0 0; border-top:1px solid var(--line); margin-top:8px; }
+</style>
+
+<div class="row" style="justify-content:space-between; margin-bottom:10px">
+  <h1 style="margin:0">{{ title }}</h1>
+  <span class="small muted">{{ job.source }}</span>
+</div>
+
+<nav class="tabs">
+  {% for p in job.pages %}
+  <a href="/vorgang/{{ job.id }}/seite/{{ p.n }}" class="{{ 'cur' if p.n == page.n else '' }}">
+    {{ p.n }}. {{ sheets_by_key[p.sheet].name if p.sheet else kind_labels.get(p.kind, p.kind) }}
+    <span class="s">{% if p.sheet in job.reviewed %}✓{% elif p.recog == 'offen' %}⏳{% elif p.recog == 'fehler' %}!{% endif %}</span>
+  </a>
+  {% endfor %}
+</nav>
+
+<div class="split {{ '' if page.image else 'noscan' }}">
+  {% if page.image %}
+  <div class="scan" id="scan"><img src="/vorgang/{{ job.id }}/bild/{{ page.n }}" alt="Scan Seite {{ page.n }}" onclick="this.parentNode.classList.toggle('zoom')"></div>
+  {% endif %}
+
+  <div>
+    <div class="card">
+      <form method="post" action="/vorgang/{{ job.id }}/seite/{{ page.n }}/zuordnung" class="row">
+        <span class="small muted">{% if page.image %}Erkannt: {{ kind_labels.get(page.kind, page.kind) }}{% if page.rotation %}, gedreht{% endif %}{% else %}{{ 'Aus Excel importiert' if page.kind == 'import' else 'Von Hand erfasst' }}, kein Scan{% endif %} · Blatt:</span>
+        <select name="sheet" onchange="this.form.submit()" style="width:auto">
+          <option value="">– nicht übernehmen –</option>
+          {% for key, name in sheet_choices %}
+          <option value="{{ key }}" {{ 'selected' if page.sheet == key else '' }}>{{ name }}{% if key in assigned and assigned[key] != page.n %} (Seite {{ assigned[key] }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </form>
+      {% if page.recog == 'offen' %}<p class="small warn">Wartet auf die Erkennung. Du kannst trotzdem schon von Hand eintragen.</p>{% endif %}
+      {% if page.recog == 'fehler' %}<p class="small err">Erkennung fehlgeschlagen: {{ page.recog_error }}</p>{% endif %}
+      {% if page.recog == 'fertig' and not reviewed %}<p class="small muted">Vom Modell gelesen{% if page.recog_seconds %} ({{ page.recog_seconds }} s){% endif %} – bitte mit dem Scan vergleichen und speichern.</p>{% endif %}
+    </div>
+
+    {% if sheet %}
+    <form method="post" action="/vorgang/{{ job.id }}/seite/{{ page.n }}" class="card">
+      <h2>{{ sheet.name }} {% if reviewed %}<span class="tag ok">geprüft</span>{% endif %}</h2>
+      {% if sheet.fields %}
+      <div class="grid2">
+        {% for f in sheet.fields + sheet.extras %}
+        {% set name = 'f:' ~ f.key %}
+        <div class="f">
+          <label for="{{ name }}">{{ f.label }}</label>
+          {% if f.options %}
+          <input type="text" id="{{ name }}" name="{{ name }}" value="{{ fields.get(f.key, '') }}" list="opt-{{ f.key }}" class="{{ 'bad' if name in hints else '' }}" placeholder="{{ f.options|join(' / ') }}">
+          <datalist id="opt-{{ f.key }}">{% for o in f.options %}<option value="{{ o }}">{% endfor %}</datalist>
+          {% else %}
+          <input type="text" id="{{ name }}" name="{{ name }}" value="{{ fields.get(f.key, '') }}" class="{{ 'bad' if name in hints else '' }}" placeholder="{{ 'leer = aus Tagegeld-Blatt' if f.formula else {'date':'TT.MM.JJJJ','time':'HH:MM','money':'0,00','percent':'100','JA/NEIN':'JA / NEIN','ja/nein':'ja / nein','iban':'DE..'}.get(f.type, '') }}">
+          {% endif %}
+          {% if name in hints %}<div class="msg">{{ hints[name] }}</div>{% endif %}
+          {% if f.key == 'gliederungsnummer' and gliederung %}<div class="small ok">{{ gliederung }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% for tb in tables %}
+      <h2 style="margin-top:10px">{{ tb.t.label }}</h2>
+      <div style="overflow-x:auto">
+      <table class="t">
+        <tr><th>#</th>{% for k, lbl, c, typ in tb.t.columns %}<th>{{ lbl }}</th>{% endfor %}</tr>
+        {% for row in tb.rows %}{% set i = loop.index0 %}
+        <tr>
+          <td class="small muted">{{ loop.index }}</td>
+          {% for k, lbl, c, typ in tb.t.columns %}{% set name = 't:' ~ tb.t.key ~ ':' ~ i ~ ':' ~ k %}
+          <td><input type="text" name="{{ name }}" value="{{ row.get(k, '') }}" class="{{ 'bad' if name in hints else '' }}" title="{{ hints.get(name, '') }}">
+            {% if name in hints %}<div class="msg">{{ hints[name] }}</div>{% endif %}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+      </div>
+      {% endfor %}
+
+      <div class="actions row">
+        {% if next_n %}<button class="primary" name="next" value="{{ next_n }}">Speichern &amp; weiter</button>{% endif %}
+        <button class="{{ '' if next_n else 'primary' }}">Speichern</button>
+        <button name="export" value="1" {{ '' if status.template else 'disabled' }}>Speichern &amp; Excel erzeugen</button>
+        {% if status.recog_enabled %}<button formaction="/vorgang/{{ job.id }}/seite/{{ page.n }}/erkennen" formnovalidate class="small" onclick="return confirm('Neu erkennen? Die Werte dieser Seite werden ersetzt.')">Neu erkennen</button>{% endif %}
+      </div>
+    </form>
+    {% endif %}
+
+    {% if free_sheets %}
+    <div class="card">
+      <form method="post" action="/vorgang/{{ job.id }}/blatt" class="row">
+        <span class="small muted">Blatt fehlt?</span>
+        <select name="sheet" style="width:auto">
+          {% for key in free_sheets %}<option value="{{ key }}">{{ sheets_by_key[key].name }}</option>{% endfor %}
+        </select>
+        <button class="small">Blatt hinzufügen</button>
+        <span class="small muted">zum Ausfüllen von Hand</span>
+      </form>
+    </div>
+    {% endif %}
+
+    <div class="card" id="export">
+      <h2>Excel</h2>
+      {% set total = all_hints.values()|map('length')|sum %}
+      {% if total %}<p class="small warn">{{ total }} Hinweis(e) offen – Felder sind rot markiert.</p>{% endif %}
+      <p class="small muted">{{ job.reviewed|length }} von {{ assigned|length }} Blättern geprüft. Nicht gespeicherte Änderungen auf dieser Seite vorher speichern.</p>
+      <form method="post" action="/vorgang/{{ job.id }}/export" class="row">
+        <input type="hidden" name="back" value="{{ page.n }}">
+        <button class="primary" {{ '' if status.template else 'disabled' }}>Excel erzeugen</button>
+        {% if job.export %}<a class="btn" href="/vorgang/{{ job.id }}/download">{{ job.export.file }}</a>{% endif %}
+      </form>
+      {% if job.export and job.export.problems %}
+      <ul class="small err">{% for p in job.export.problems %}<li>{{ p }} – Zelle leer gelassen</li>{% endfor %}</ul>
+      {% elif job.export %}<p class="small ok">Erzeugt {{ job.export.at.replace('T', ' ')[:16] }}. Excel rechnet beim Öffnen alle Formeln neu.</p>{% endif %}
+      {% if job.export and job.export.veraltet %}<p class="small warn">Nach dem Export geändert – Excel neu erzeugen, damit die Summen stimmen.</p>{% endif %}
+      {% if job.export and job.export.summen %}{% set s = job.export.summen %}
+      <p class="small">Gesamtkosten <b>{{ s.gesamt|eur }}</b> · Anteil KatS {{ s.anteil|pct }} · Kosten KatS <b>{{ s.kats|eur }}</b>
+        · <a href="/verwendungsnachweis">Verwendungsnachweis</a></p>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

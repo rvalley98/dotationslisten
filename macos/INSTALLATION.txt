@@ -1,0 +1,43 @@
+Dotationslisten – Installation
+==============================
+
+Voraussetzung: Mac mit Apple-Chip (M1 oder neuer), macOS 13 Ventura oder neuer.
+
+1. „Dotationslisten“ in den Ordner „Programme“ ziehen.
+
+2. Erster Start: Die App ist nicht bei Apple registriert. macOS meldet deshalb beim
+   ersten Öffnen, dass sie nicht geprüft werden kann.
+   - Meldung mit „Fertig“ schließen.
+   - Systemeinstellungen → Datenschutz & Sicherheit → nach unten scrollen →
+     bei „Dotationslisten“ auf „Dennoch öffnen“ klicken und bestätigen.
+   Das ist nur einmal nötig.
+
+3. Die App öffnet sich im Browser (http://127.0.0.1:8765). Oben in der Menüleiste
+   erscheint ein kleines Listen-Symbol: darüber öffnen, Datenordner zeigen, beenden.
+
+4. Einmalig die Excel-Vorlage hochladen (Startseite) – am besten als .xlsx.
+   Eine .xls-Vorlage in Excel oder Numbers als .xlsx speichern.
+
+Optional (kostenlos, die App zeigt fehlende Teile oben auf der Seite an):
+
+- Ollama – Handschrifterkennung auf dem eigenen Mac (ohne Ollama werden die Werte
+  von Hand eingetragen): https://ollama.com/download
+  Danach in der App auf „Modell jetzt laden“ klicken (einmalig ca. 6 GB).
+  Empfohlen: mindestens 16 GB Arbeitsspeicher.
+- LibreOffice – nur nötig, um .xls-Dateien direkt einzulesen:
+  https://de.libreoffice.org/download/download/
+
+Microsoft Excel und LibreOffice öffnen die erzeugten Dateien gleichermaßen; die Summen
+rechnet die App selbst.
+
+Daten
+-----
+Alle Vorgänge, Scans und erzeugten Excel-Dateien liegen in
+  Dokumente/Dotationslisten
+Nichts verlässt den Rechner. Der Ordner lässt sich über das Menüleisten-Symbol ändern
+(z. B. auf ein NAS). Bitte regelmäßig sichern (Time Machine oder NAS).
+
+Scanner: Den Ordner „Dokumente/Dotationslisten/eingang“ als Scan-Ziel einrichten
+(z. B. über die Dateifreigabe des Macs) – neue PDFs werden automatisch eingelesen.
+
+Unterstützen: https://buymeacoffee.com/rvalley98

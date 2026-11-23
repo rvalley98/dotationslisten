@@ -1,0 +1,28 @@
+Dotationslisten
+Copyright (c) 2026 Robin Valley. Alle Rechte vorbehalten.
+
+Diese Software einschließlich Quellcode, Objektcode, Dokumentation, Bildern und sonstiger
+Bestandteile ist urheberrechtlich geschützt. Sämtliche Rechte, insbesondere das Recht zur
+Vervielfältigung, Verbreitung, öffentlichen Zugänglichmachung, Bearbeitung, Übersetzung,
+Dekompilierung und Unterlizenzierung, liegen ausschließlich beim Rechteinhaber.
+
+Ohne vorherige schriftliche Zustimmung des Rechteinhabers ist es untersagt, die Software
+oder Teile davon zu kopieren, zu verändern, weiterzugeben, zu veröffentlichen, zu verkaufen,
+zu vermieten, in andere Software einzubauen oder Dritten in sonstiger Weise zugänglich zu
+machen. Gesetzlich zwingend erlaubte Handlungen (§§ 69d, 69e UrhG) bleiben unberührt.
+
+Nutzung der Installationspakete: Wer ein vom Rechteinhaber selbst veröffentlichtes
+Installationspaket (DMG für macOS, Setup für Windows) erhalten hat, darf die darin enthaltene
+App unentgeltlich auf eigenen Geräten installieren und für die eigene Abrechnung nutzen.
+Weitergabe, Veränderung und jede andere Nutzung bedürfen der schriftlichen Zustimmung.
+
+Die Software wird ohne Gewähr bereitgestellt. Die Haftung für leichte Fahrlässigkeit ist
+ausgeschlossen, soweit gesetzlich zulässig; die Haftung für Vorsatz und grobe Fahrlässigkeit,
+für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit sowie nach dem
+Produkthaftungsgesetz bleibt unberührt.
+
+Komponenten Dritter (z. B. Python, Tesseract, PDFium, Python-Bibliotheken) stehen unter ihren
+eigenen Lizenzen und sind von diesem Vorbehalt nicht erfasst; siehe THIRD_PARTY_NOTICES.md
+bzw. „Lizenzen Dritter.txt“ im Installationspaket.
+
+Kontakt für Anfragen zur Nutzung: https://github.com/rvalley98
