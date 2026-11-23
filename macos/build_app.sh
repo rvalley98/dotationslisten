@@ -43,7 +43,8 @@ codesign --verify --deep --strict "$APP"
 MIN_OK=13.0
 bad=0
 while IFS= read -r f; do
-    v="$(otool -l "$f" 2>/dev/null | awk '/LC_BUILD_VERSION/ {b=1} b && /minos/ {print $2; exit}')"
+    # read all of otool's output (an early awk exit -> SIGPIPE -> pipefail would end the script)
+    v="$(otool -l "$f" 2>/dev/null | awk '/LC_BUILD_VERSION/ {b=1} b && /minos/ && !done {print $2; done=1}' || true)"
     [ -z "$v" ] && continue
     if [ "$(printf '%s\n%s\n' "$v" "$MIN_OK" | sort -V | tail -1)" != "$MIN_OK" ] && [ "$v" != "$MIN_OK" ]; then
         echo "zu neu (macOS $v): $f"; bad=1
