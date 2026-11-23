@@ -93,6 +93,12 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with: { path: dist, merge-multiple: true }
-      - run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "Dotationslisten ${GITHUB_REF_NAME#v}" --generate-notes
+      # a re-run or a re-pushed tag replaces the files of the existing release
+      - run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "Dotationslisten ${GITHUB_REF_NAME#v}" --generate-notes
+          fi
         env:
           GH_TOKEN: ${{ github.token }}
