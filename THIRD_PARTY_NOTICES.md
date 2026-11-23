@@ -18,5 +18,9 @@ gesammelt (`desktop/collect_licenses.py`) und liegen der App als „Lizenzen Dri
 | rumps (macOS) | BSD-3-Clause |
 | pystray (Windows) | LGPL-3.0 – liegt als unveränderte, austauschbare .py-Dateien im Programmordner |
 | PyInstaller-Bootloader | GPL-2.0 mit Ausnahme für gebündelte Programme |
+| Ollama 0.40.17 (unverändert aus dem offiziellen Release, `desktop/fetch_ollama.py`) | MIT; enthält llama.cpp/ggml (MIT), Go-Laufzeit (BSD-3-Clause) u. a. – Texte liegen bei |
+| NVIDIA CUDA 12-Laufzeitbibliotheken (Windows, Teil von Ollama) | NVIDIA CUDA Toolkit EULA (weitergabefähige Bestandteile) |
+| Microsoft Visual C++-Laufzeit (Windows, Teil von Ollama) | Microsoft-Lizenz für weitergabefähigen Code |
 
-LibreOffice und Ollama werden nicht mitgeliefert; sie werden bei Bedarf separat installiert.
+Das Erkennungsmodell (qwen2.5vl, Apache-2.0) wird nicht mitgeliefert, sondern beim ersten Einrichten
+aus der App heraus von ollama.com geladen. LibreOffice wird nicht mitgeliefert.

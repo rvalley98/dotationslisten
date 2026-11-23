@@ -89,7 +89,7 @@ def _status() -> dict[str, Any]:
     ollama = "ok" if ok else ("modell" if "fehlt" in msg else ("offline" if rec.enabled else "aus"))
     return {"template": C.VORLAGE_LEER.exists(), "recog_ok": ok, "recog_msg": msg,
             "recog_enabled": rec.enabled, "busy": w.busy if w else None,
-            "soffice": C.soffice_available(), "ollama": ollama, "model": C.OLLAMA_MODEL, "pull": pull,
+            "soffice": C.soffice_available(), "ollama": ollama, "ollama_source": C.OLLAMA_SOURCE, "model": C.OLLAMA_MODEL, "pull": pull,
             "new_release": updates.info()}
 
 
@@ -134,7 +134,7 @@ def ollama_pull(request: Request):
 @app.get("/health")
 def health():
     """Lets a second start of the Mac app find the running one."""
-    return {"app": "dotationslisten", "version": C.VERSION}
+    return {"app": "dotationslisten", "version": C.VERSION, "ollama": C.OLLAMA_SOURCE, "ollama_url": C.OLLAMA_URL}
 
 
 def _job(job_id: str) -> dict[str, Any]:

@@ -30,8 +30,8 @@ Erste Abrechnung
 ----------------
 1. Alle Bögen einer Veranstaltung als ein PDF scannen und auf der Startseite hochladen.
    Reihenfolge, Leerseiten und gedrehte Blätter sind egal.
-2. Ist Ollama installiert (siehe unten), liest die App die Handschrift automatisch.
-   Sonst den Vorgang öffnen und die Werte von Hand eintragen.
+2. Ist das Erkennungsmodell geladen (siehe unten), liest die App die Handschrift
+   automatisch. Sonst den Vorgang öffnen und die Werte von Hand eintragen.
 3. Jedes Blatt prüfen – rot markierte Felder passen nicht – und „Speichern“.
 4. „Excel erzeugen“. Die fertige Datei liegt im Ordner „ausgang“.
 
@@ -39,15 +39,17 @@ Für den Verwendungsnachweis die Datei des Jahres („Anlage 3“) unter „Verw
 hochladen; die App trägt alle fertigen Ausbildungen und Übungen ein und rechnet nach.
 
 
-Optional (kostenlos, die App zeigt fehlende Teile oben auf der Seite an)
-------------------------------------------------------------------------
-- Ollama – liest die Handschrift, ebenfalls nur auf diesem PC:
-  https://ollama.com/download
-  Danach in der App auf „Modell jetzt laden“ klicken (einmalig ca. 6 GB).
-  Empfohlen: mindestens 16 GB Arbeitsspeicher; ohne starke Grafikkarte dauert eine
-  Seite mehrere Minuten. Ohne Ollama werden die Werte von Hand eingetragen, alles andere
-  funktioniert genauso.
-- LibreOffice – nur nötig, um alte .xls-Dateien direkt einzulesen:
+Handschrifterkennung einrichten (einmalig)
+------------------------------------------
+Die Erkennung ist in der App enthalten. Nur das Erkennungsmodell (ca. 6 GB) muss einmal
+geladen werden: oben in der App auf „Modell jetzt laden“ klicken. Danach läuft die
+Erkennung ohne Internet.
+Empfohlen: mindestens 16 GB Arbeitsspeicher. Mit einer Nvidia-Grafikkarte geht es
+schnell, sonst dauert eine Seite mehrere Minuten.
+Ohne Modell funktioniert alles andere genauso; die Werte werden dann von Hand eingetragen.
+
+
+Optional: LibreOffice (kostenlos) – nur nötig, um alte .xls-Dateien direkt einzulesen:
   https://de.libreoffice.org/download/download/
 
 Microsoft Excel und LibreOffice öffnen die erzeugten Dateien gleichermaßen; die Summen

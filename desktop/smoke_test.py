@@ -1,5 +1,7 @@
 """Smoke test of a BUILT app (CI, after PyInstaller): server answers, a scanned PDF dropped into
 the scanner folder is read (PDFium) and classified (bundled Tesseract over stdin + deu data).
+With SMOKE_EXPECT_OLLAMA=1 also: the bundled Ollama server was started and answers (no model
+is downloaded - that is several GB).
 
     python desktop/smoke_test.py <data dir> [base url]
 """
@@ -7,6 +9,7 @@ the scanner folder is read (PDFium) and classified (bundled Tesseract over stdin
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import urllib.request
@@ -49,6 +52,10 @@ def main(data: Path, base: str) -> None:
     health = json.loads(wait("Server antwortet nicht", lambda: get(f"{base}/health"), 90))
     print("health:", health)
     assert health["app"] == "dotationslisten", health
+    if os.environ.get("SMOKE_EXPECT_OLLAMA") == "1":
+        assert health.get("ollama") == "mitgeliefert", f"mitgeliefertes Ollama nicht gewählt: {health}"
+        v = json.loads(wait("mitgeliefertes Ollama antwortet nicht", lambda: get(f"{health['ollama_url']}/api/version"), 60))
+        print("Ollama:", v)
 
     eingang = data / "eingang"
     eingang.mkdir(parents=True, exist_ok=True)

@@ -35,6 +35,8 @@ UPDATE_PAGE = f"https://github.com/{UPDATE_REPO}/releases/latest"
 RECOGNIZER = os.environ.get("RECOGNIZER", "ollama")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5vl:7b")
+# set by the desktop launcher: "mitgeliefert" (bundled Ollama), "extern" (the user's own) or "fehlt"
+OLLAMA_SOURCE = os.environ.get("DOTATIONSLISTEN_OLLAMA", "")
 # CPU inference takes minutes per page
 OLLAMA_TIMEOUT = float(os.environ.get("OLLAMA_TIMEOUT", "1800"))
 

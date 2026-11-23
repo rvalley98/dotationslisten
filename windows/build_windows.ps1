@@ -2,6 +2,7 @@
 #
 #   powershell -ExecutionPolicy Bypass -File windows\build_windows.ps1
 #
+# Ollama is downloaded by desktop/fetch_ollama.py (pinned version, checksum).
 # Needs: Python 3.12 (python.org or "py" launcher), Tesseract from the UB Mannheim
 # (winget install UB-Mannheim.TesseractOCR / choco install tesseract) and Inno Setup 6
 # (winget install JRSoftware.InnoSetup / choco install innosetup).
@@ -56,6 +57,9 @@ if (-not (Test-Path $Py)) {
 Run $Py @("-m", "pip", "install", "--quiet", "--upgrade", "pip")
 Run $Py @("-m", "pip", "install", "--quiet", "-r", "$Root\requirements.txt", "pyinstaller", "pystray")
 
+# --- Ollama (handwriting recognition; CPU, Vulkan, Nvidia CUDA 12) - the model is loaded from the app
+Run $Py @("$Root\desktop\fetch_ollama.py", "windows", $Build)
+
 # --- icons, version resource, licenses
 Run $Py @("$Root\desktop\make_icons.py", $Build)
 $v = ($Version.Split(".") + @("0", "0", "0"))[0..3] -join ", "
@@ -73,7 +77,8 @@ VSVersionInfo(
 )
 "@ | Set-Content -Encoding UTF8 "$Build\version_info.txt"
 Run $Py @("$Root\desktop\collect_licenses.py", "$Build\THIRD_PARTY_LICENSES.txt",
-          "Tesseract OCR (Windows-Build der UB Mannheim) und Sprachdaten (Apache-2.0)=$Build\tesseract-LICENSE.txt")
+          "Tesseract OCR (Windows-Build der UB Mannheim) und Sprachdaten (Apache-2.0)=$Build\tesseract-LICENSE.txt",
+          "Ollama (MIT) und mitgelieferte Bibliotheken=$Build\ollama-licenses")
 
 # Inno Setup reads .txt files as UTF-8 only with a BOM
 foreach ($f in @(@("$Root\LICENSE", "$Build\LICENSE.txt"), @("$Here\INSTALLATION.txt", "$Build\INSTALLATION.txt"))) {
@@ -84,6 +89,9 @@ foreach ($f in @(@("$Root\LICENSE", "$Build\LICENSE.txt"), @("$Here\INSTALLATION
 if (Test-Path $Dist) { Remove-Item -Recurse -Force $Dist }
 Run $Py @("-m", "PyInstaller", "--noconfirm", "--clean", "--log-level", "WARN",
           "--distpath", $Dist, "--workpath", "$Build\pyinstaller", "$Here\Dotationslisten.spec")
+# Ollama as shipped, next to the exe (not through PyInstaller)
+Copy-Item -Recurse "$Build\ollama" "$Dist\Dotationslisten\ollama"
+Remove-Item "$Dist\Dotationslisten\ollama\.version" -ErrorAction SilentlyContinue
 
 # --- installer
 $Iscc = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",

@@ -60,10 +60,17 @@ button.primary, .btn.primary { background:var(--accent); border-color:var(--acce
   installieren (kostenlos), dann liest die App .xls direkt.</div>
 {% endif %}
 {% if status.ollama == 'offline' %}
+{% if status.ollama_source == 'mitgeliefert' %}
+<div class="card small"><meta http-equiv="refresh" content="10"><b>Handschrifterkennung startet …</b> Das dauert beim ersten Start einige Sekunden.
+  Bleibt dieser Hinweis, die App beenden und neu starten (Protokoll: ollama.log im Protokoll-Ordner). Bis dahin lassen sich die Werte von Hand eintragen.</div>
+{% elif status.ollama_source == 'fehlt' %}
+<div class="card small"><b>Handschrifterkennung aus:</b> Die mitgelieferte Erkennung braucht auf dem Mac macOS 14 oder neuer. Alles andere funktioniert, die Werte werden von Hand eingetragen.</div>
+{% else %}
 <div class="card small"><b>Handschrifterkennung aus:</b> Ollama läuft nicht. Ohne Ollama funktioniert alles, die Werte werden dann von Hand eingetragen.
   Für die Erkennung Ollama installieren und starten: <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com/download</a>.</div>
+{% endif %}
 {% elif status.ollama == 'modell' %}
-<div class="card small row"><span><b>Erkennungsmodell fehlt</b> ({{ status.model }}, ca. 6 GB Download, einmalig).</span>
+<div class="card small row"><span><b>Handschrifterkennung: Modell fehlt</b> ({{ status.model }}, ca. 6 GB, einmalig von ollama.com – danach läuft die Erkennung ohne Internet; empfohlen ab 16 GB Arbeitsspeicher).</span>
   {% if status.pull.running %}<meta http-equiv="refresh" content="5"><span class="warn">Wird geladen: {{ status.pull.percent or 0 }} % ({{ status.pull.step }}) …</span>
   {% else %}<form method="post" action="/ollama/pull" style="margin:0"><button class="primary small">Modell jetzt laden</button></form>
   {% if status.pull.error %}<span class="err">Fehlgeschlagen: {{ status.pull.error }}</span>{% endif %}{% endif %}

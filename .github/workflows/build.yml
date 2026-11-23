@@ -40,16 +40,22 @@ jobs:
         with:
           path: macos/build/src
           key: tesseract-src-${{ hashFiles('macos/build_tesseract.sh') }}
+      - uses: actions/cache@v4
+        with:
+          path: macos/build/ollama-src
+          key: ollama-macos-${{ hashFiles('desktop/fetch_ollama.py') }}
       - run: macos/build_app.sh
       - name: Smoke test of the built app
         run: |
-          export DATA_DIR="$RUNNER_TEMP/data" DOTATIONSLISTEN_NO_BROWSER=1 POLL_SECONDS=1
+          export DATA_DIR="$RUNNER_TEMP/data" DOTATIONSLISTEN_NO_BROWSER=1 POLL_SECONDS=1 SMOKE_EXPECT_OLLAMA=1
           macos/dist/Dotationslisten.app/Contents/MacOS/Dotationslisten > "$RUNNER_TEMP/app.log" 2>&1 &
-          macos/build/venv/bin/python desktop/smoke_test.py "$DATA_DIR" || { cat "$RUNNER_TEMP/app.log" ~/Library/Logs/Dotationslisten/app.log; exit 1; }
+          macos/build/venv/bin/python desktop/smoke_test.py "$DATA_DIR" || { cat "$RUNNER_TEMP/app.log" ~/Library/Logs/Dotationslisten/*.log; exit 1; }
           kill %1 || true
       - uses: actions/upload-artifact@v4
         with:
           name: macos
+          retention-days: 3
+          compression-level: 0  # already compressed (DMG / Inno Setup)
           path: macos/dist/*.dmg
           if-no-files-found: error
 
@@ -62,6 +68,10 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: choco install tesseract innosetup -y --no-progress
+      - uses: actions/cache@v4
+        with:
+          path: windows/build/ollama-src
+          key: ollama-windows-${{ hashFiles('desktop/fetch_ollama.py') }}
       - run: powershell -ExecutionPolicy Bypass -File windows\build_windows.ps1
       - name: Unit tests on Windows (formulas, rules, paths)
         run: windows\build\venv\Scripts\python.exe -m pytest -q -rs
@@ -71,16 +81,18 @@ jobs:
       - name: Smoke test of the built app
         shell: pwsh
         run: |
-          $env:DATA_DIR = "$env:RUNNER_TEMP\data"; $env:DOTATIONSLISTEN_NO_BROWSER = "1"; $env:POLL_SECONDS = "1"
+          $env:DATA_DIR = "$env:RUNNER_TEMP\data"; $env:DOTATIONSLISTEN_NO_BROWSER = "1"; $env:POLL_SECONDS = "1"; $env:SMOKE_EXPECT_OLLAMA = "1"
           $p = Start-Process windows\dist\Dotationslisten\Dotationslisten.exe -PassThru
           windows\build\venv\Scripts\python.exe desktop\smoke_test.py $env:DATA_DIR
           $ok = $LASTEXITCODE
-          if ($ok -ne 0) { Get-Content "$env:LOCALAPPDATA\Dotationslisten\Logs\app.log" -ErrorAction SilentlyContinue }
+          if ($ok -ne 0) { Get-Content "$env:LOCALAPPDATA\Dotationslisten\Logs\*.log" -ErrorAction SilentlyContinue }
           Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
           exit $ok
       - uses: actions/upload-artifact@v4
         with:
           name: windows
+          retention-days: 3
+          compression-level: 0  # already compressed (DMG / Inno Setup)
           path: windows/dist/*.exe
           if-no-files-found: error
 

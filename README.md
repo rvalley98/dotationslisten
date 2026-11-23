@@ -7,7 +7,8 @@ scannen, Werte prüfen, Excel-Abrechnung und Verwendungsnachweis automatisch bef
 
 Entstanden aus der Arbeit als Referent Katastrophenschutz einer DLRG-Ortsgruppe. Eine
 installierbare App für Mac und Windows, die komplett auf dem eigenen Rechner läuft – ohne
-Server, ohne Cloud, ohne Konto.
+Server, ohne Cloud, ohne Konto. Texterkennung (Tesseract) und Handschrifterkennung (Ollama) sind
+dabei.
 
 > Kein offizielles Angebot der DLRG. Die App arbeitet mit der Excel-Vorlage, die die Gliederung
 > ohnehin verwendet, und ändert nichts an den Abrechnungsregeln.
@@ -75,18 +76,26 @@ Datenordner ändern, Protokoll, Beenden.
 Erscheint eine neue Version, zeigt die App oben einen Hinweis mit Link zum Download. Zum
 Aktualisieren einfach die neue Version drüberinstallieren – die Daten bleiben erhalten.
 
-### Optional
+### Handschrifterkennung einrichten
 
-Beides kostenlos; die App zeigt oben an, wenn etwas fehlt.
+Die Erkennung (Ollama) ist in der App enthalten und startet mit ihr. Nur das Erkennungsmodell
+(qwen2.5vl, ca. 6 GB) wird einmalig nachgeladen: oben in der App auf „Modell jetzt laden“ klicken.
+Danach läuft die Erkennung ohne Internet.
 
-- **[Ollama](https://ollama.com/download)** liest die Handschrift, ebenfalls nur auf dem eigenen
-  Rechner. Nach der Installation in der App auf „Modell jetzt laden“ klicken (einmalig ca. 6 GB).
-  Empfohlen: 16 GB Arbeitsspeicher; auf Rechnern ohne starke Grafikeinheit dauert eine Seite
-  mehrere Minuten. Ohne Ollama trägt man die Werte auf der Prüfseite von Hand ein – Zuordnung der
-  Seiten und alle Prüfungen funktionieren trotzdem.
-- **[LibreOffice](https://de.libreoffice.org/download/download/)** wird nur gebraucht, um alte
-  `.xls`-Dateien direkt einzulesen. Die erzeugten `.xlsx`-Dateien öffnen Microsoft Excel und
-  LibreOffice gleichermaßen; alle Summen rechnet die App selbst.
+- Empfohlen: 16 GB Arbeitsspeicher. Mac mit Apple-Chip: meist unter einer Minute pro Seite.
+  Windows: mit einer Nvidia-Grafikkarte schnell, sonst auf dem Prozessor mehrere Minuten pro Seite.
+- Mac: braucht macOS 14 oder neuer; unter macOS 13 werden die Werte von Hand eingetragen.
+- Ist Ollama schon separat installiert und gestartet, nutzt die App dieses (und dessen Modelle).
+- Das Modell liegt im Benutzerordner unter `.ollama` (nicht im Datenordner) und bleibt beim
+  Deinstallieren erhalten; zum Entfernen den Ordner `.ollama/models` löschen.
+
+Ohne Modell funktioniert alles andere genauso – die Werte werden dann von Hand eingetragen.
+
+### Optional: LibreOffice
+
+[LibreOffice](https://de.libreoffice.org/download/download/) (kostenlos) wird nur gebraucht, um alte
+`.xls`-Dateien direkt einzulesen. Die erzeugten `.xlsx`-Dateien öffnen Microsoft Excel und
+LibreOffice gleichermaßen; alle Summen rechnet die App selbst.
 
 ## Arbeitsablauf
 
@@ -110,8 +119,8 @@ einem anderen Blatt zuweisen, ein fehlendes Blatt von Hand hinzufügen.
 
 ### 3. Erkennen und prüfen
 
-Ist Ollama installiert, füllt die App die Felder automatisch vor („Neu erkennen“ wiederholt das
-für eine Seite); sonst werden sie von Hand eingetragen.
+Ist das Erkennungsmodell geladen, füllt die App die Felder automatisch vor („Neu erkennen“
+wiederholt das für eine Seite); sonst werden sie von Hand eingetragen.
 Auf der Prüfseite steht der Scan links, die Felder rechts. Rot markiert ist, was nicht passt:
 
 - Datum, Uhrzeit, Beträge, Kilometer oder Prozent nicht als solche lesbar
@@ -163,8 +172,10 @@ anderes Formular wird mit Hinweis abgelehnt, statt falsche Zahlen zu liefern.
 In den Abrechnungen stehen Namen, Wohnorte und IBANs der Helferinnen und Helfer. Deshalb:
 
 - **Alles bleibt auf dem Rechner.** Scans, Erkennung (Tesseract und Ollama) und Excel laufen
-  lokal. Die App nimmt keine Verbindung nach außen auf, außer einmal täglich zur Abfrage der
-  neuesten Versionsnummer bei GitHub – dabei werden keine Abrechnungsdaten übertragen.
+  lokal. Verbindungen nach außen gibt es nur zwei, beide ohne Abrechnungsdaten: einmal täglich
+  die Abfrage der neuesten Versionsnummer bei GitHub und – nur auf Knopfdruck – der einmalige
+  Download des Erkennungsmodells von ollama.com. Die Cloud-Funktionen von Ollama sind
+  abgeschaltet.
 - **Kein Zugriff aus dem Netz.** Die Oberfläche ist nur unter 127.0.0.1 auf dem eigenen Rechner
   erreichbar – daher braucht sie auch kein Passwort. Den Rechner selbst mit einem Kennwort
   schützen.
@@ -194,16 +205,18 @@ zwei gleichzeitig am selben Vorgang, können Änderungen des einen verloren gehe
   und erneut erzeugen.
 - **Seite falsch zugeordnet:** auf der Vorgangsseite das richtige Blatt auswählen. Meist war der
   gedruckte Titel abgeschnitten oder stark verschmutzt.
-- **Handschrifterkennung sehr langsam:** normal ohne starke Grafikeinheit; Werte notfalls von Hand
-  eintragen.
+- **Handschrifterkennung sehr langsam:** normal ohne starke Grafikeinheit (Windows ohne
+  Nvidia-Karte); Werte notfalls von Hand eintragen.
+- **„Handschrifterkennung startet …“ bleibt stehen:** App beenden und neu starten; Details im
+  Protokollordner in `ollama.log`.
 - **Protokoll:** Menü „Protokoll anzeigen“ (Mac: `~/Library/Logs/Dotationslisten/app.log`,
-  Windows: `%LOCALAPPDATA%\Dotationslisten\Logs\app.log`) – bei Fehlermeldungen hilft es, den
+  Windows: `%LOCALAPPDATA%\Dotationslisten\Logs\app.log`; daneben `ollama.log`) – bei Fehlermeldungen hilft es, den
   Inhalt mitzuschicken (vorher auf Namen/IBANs prüfen).
 
 ## Entwicklung
 
 Python 3.12. FastAPI + Jinja2 (`app/`), gestartet vom Desktop-Launcher (`desktop/launcher.py`:
-Server auf 127.0.0.1, Menüleiste/Taskleiste, Datenordner). Bausteine:
+Server auf 127.0.0.1, Menüleiste/Taskleiste, Datenordner, Ollama). Bausteine:
 
 - `app/fields.py` – Feldkarte aller Eingabezellen der Vorlage (ein Test prüft sie gegen die
   Vorlage)
@@ -214,6 +227,12 @@ Server auf 127.0.0.1, Menüleiste/Taskleiste, Datenordner). Bausteine:
 - `app/formulas.py` – eigener Formel-Rechner für die Summen (kein LibreOffice nötig)
 - `app/verwendungsnachweis.py` – Kostenblatt, Einstellungen, Zusammenfassung
 - `app/updates.py` – Hinweis auf neue Versionen
+- `desktop/fetch_ollama.py` – lädt das festgelegte Ollama-Release (Prüfsumme) für den Build;
+  Mac: nur arm64 und llama.cpp/Metal (~56 MB), Windows: CPU, Vulkan und Nvidia CUDA 12
+
+Ollama: Läuft unter 127.0.0.1:11434 ein eigenes Ollama, nutzt der Launcher dieses, sonst startet er
+das mitgelieferte unter 127.0.0.1:11435 (`OLLAMA_NO_CLOUD=1`) und beendet es mit der App.
+`DOTATIONSLISTEN_OLLAMA=mitgeliefert` erzwingt das mitgelieferte, `OLLAMA_URL` setzt eines fest.
 
 ```sh
 uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt rumps   # Windows: pystray

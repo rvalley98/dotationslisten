@@ -1,7 +1,7 @@
 """Collects the license texts of everything the desktop app ships (Python packages, Python
 itself, Tesseract, ...) into one file that is bundled with the app.
 
-    python desktop/collect_licenses.py <out file> <extra license files: "Name=path" ...>
+    python desktop/collect_licenses.py <out file> <extra licenses: "Name=file or folder" ...>
 """
 
 from __future__ import annotations
@@ -61,9 +61,11 @@ def license_texts(dist: md.Distribution) -> list[str]:
     for f in dist.files or []:
         if re.search(r"(LICEN[CS]E|COPYING|NOTICE|AUTHORS)", f.name, re.I) and not f.name.endswith((".py", ".pyc")):
             try:
-                out.append(f"--- {f}\n{Path(f.locate()).read_text(encoding='utf-8', errors='replace').strip()}")
+                text = Path(f.locate()).read_text(encoding="utf-8", errors="replace").strip()
             except OSError:
-                pass
+                continue
+            if "\x00" not in text:  # e.g. pyobjc ships a compiled "copying...so"
+                out.append(f"--- {f}\n{text}")
     return out
 
 
@@ -83,7 +85,11 @@ def main(out: Path, extras: list[str]) -> None:
         parts += license_texts(dist) or ["(kein Lizenztext im Paket enthalten)"]
     for extra in extras:
         name, _, path = extra.partition("=")
-        parts.append(f"\n=== {name}\n{Path(path).read_text(encoding='utf-8', errors='replace').strip()}")
+        parts.append(f"\n=== {name}")
+        p = Path(path)
+        for f in sorted(p.iterdir()) if p.is_dir() else [p]:  # a folder: every license file in it
+            text = f.read_text(encoding="utf-8", errors="replace").strip()
+            parts.append(f"--- {f.name}\n{text}" if p.is_dir() else text)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(parts) + "\n", encoding="utf-8")
     print(f"{out}: {len(shipped())} Pakete")

@@ -26,6 +26,9 @@ LicenseFile={#Root}\windows\build\LICENSE.txt
 InfoAfterFile={#Root}\windows\build\INSTALLATION.txt
 Compression=lzma2/max
 SolidCompression=yes
+; Ollama with the Nvidia libraries is >1 GB: compress in parallel
+LZMAUseSeparateProcess=yes
+LZMANumBlockThreads=4
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -55,4 +58,7 @@ Filename: "{app}\Dotationslisten.exe"; Description: "Dotationslisten jetzt start
 
 [UninstallRun]
 Filename: "{cmd}"; Parameters: "/C taskkill /IM Dotationslisten.exe /F"; Flags: runhidden; RunOnceId: "StopApp"
-; the data folder (Dokumente\Dotationslisten) is never touched by the uninstaller
+; the bundled Ollama normally ends with the app; only ours (in {app}), never an Ollama the user installed
+Filename: "powershell.exe"; Parameters: "-NoProfile -Command ""Get-Process ollama -ErrorAction SilentlyContinue | Where-Object {{ $_.Path -like '{app}\*' } | Stop-Process -Force"""; Flags: runhidden; RunOnceId: "StopOllama"
+; the data folder (Dokumente\Dotationslisten) and the downloaded model (%USERPROFILE%\.ollama) are never
+; touched by the uninstaller
