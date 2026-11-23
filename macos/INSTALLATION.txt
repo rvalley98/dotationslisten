@@ -1,43 +1,87 @@
-Dotationslisten – Installation
-==============================
+Dotationslisten – Installation auf dem Mac
+==========================================
+
+Dotationslisten erfasst die Abrechnungen des Katastrophenschutzes (Veranstaltungsabrechnung,
+Teilnehmerliste, Tagegeld, Fahrtkosten, Tauchprotokoll): Papierbögen scannen, Werte prüfen,
+die Excel-Vorlage und den Verwendungsnachweis automatisch befüllen. Alles läuft auf diesem
+Mac – nichts wird ins Internet hochgeladen.
 
 Voraussetzung: Mac mit Apple-Chip (M1 oder neuer), macOS 13 Ventura oder neuer.
 
+
+Installieren
+------------
 1. „Dotationslisten“ in den Ordner „Programme“ ziehen.
 
-2. Erster Start: Die App ist nicht bei Apple registriert. macOS meldet deshalb beim
-   ersten Öffnen, dass sie nicht geprüft werden kann.
+2. Erster Start: Die App ist nicht bei Apple registriert (das kostet eine jährliche
+   Gebühr). macOS meldet deshalb beim ersten Öffnen, dass sie nicht geprüft werden kann.
    - Meldung mit „Fertig“ schließen.
    - Systemeinstellungen → Datenschutz & Sicherheit → nach unten scrollen →
      bei „Dotationslisten“ auf „Dennoch öffnen“ klicken und bestätigen.
    Das ist nur einmal nötig.
 
-3. Die App öffnet sich im Browser (http://127.0.0.1:8765). Oben in der Menüleiste
-   erscheint ein kleines Listen-Symbol: darüber öffnen, Datenordner zeigen, beenden.
+3. Die App öffnet sich im Browser (http://127.0.0.1:8765 – diese Adresse funktioniert
+   nur auf diesem Mac). Oben in der Menüleiste erscheint ein kleines Listen-Symbol:
+   Öffnen, Datenordner zeigen, Datenordner ändern, Protokoll anzeigen, Beenden.
+   Schließt man nur den Browser-Tab, läuft die App im Hintergrund weiter.
 
-4. Einmalig die Excel-Vorlage hochladen (Startseite) – am besten als .xlsx.
-   Eine .xls-Vorlage in Excel oder Numbers als .xlsx speichern.
+4. Einmalig die Excel-Vorlage der Abrechnung hochladen (Startseite), am besten als .xlsx.
+   Eine .xls-Vorlage vorher in Excel oder Numbers als .xlsx speichern.
 
-Optional (kostenlos, die App zeigt fehlende Teile oben auf der Seite an):
 
-- Ollama – Handschrifterkennung auf dem eigenen Mac (ohne Ollama werden die Werte
-  von Hand eingetragen): https://ollama.com/download
+Erste Abrechnung
+----------------
+1. Alle Bögen einer Veranstaltung als ein PDF scannen und auf der Startseite hochladen.
+   Reihenfolge, Leerseiten und gedrehte Blätter sind egal.
+2. Ist Ollama installiert (siehe unten), liest die App die Handschrift automatisch.
+   Sonst den Vorgang öffnen und die Werte von Hand eintragen.
+3. Jedes Blatt prüfen – rot markierte Felder passen nicht – und „Speichern“.
+4. „Excel erzeugen“. Die fertige Datei liegt im Ordner „ausgang“.
+
+Für den Verwendungsnachweis die Datei des Jahres („Anlage 3“) unter „Verwendungsnachweis“
+hochladen; die App trägt alle fertigen Ausbildungen und Übungen ein und rechnet nach.
+
+
+Optional (kostenlos, die App zeigt fehlende Teile oben auf der Seite an)
+------------------------------------------------------------------------
+- Ollama – liest die Handschrift, ebenfalls nur auf diesem Mac:
+  https://ollama.com/download
   Danach in der App auf „Modell jetzt laden“ klicken (einmalig ca. 6 GB).
-  Empfohlen: mindestens 16 GB Arbeitsspeicher.
-- LibreOffice – nur nötig, um .xls-Dateien direkt einzulesen:
+  Empfohlen: mindestens 16 GB Arbeitsspeicher. Ohne Ollama werden die Werte von Hand
+  eingetragen, alles andere funktioniert genauso.
+- LibreOffice – nur nötig, um alte .xls-Dateien direkt einzulesen:
   https://de.libreoffice.org/download/download/
 
 Microsoft Excel und LibreOffice öffnen die erzeugten Dateien gleichermaßen; die Summen
 rechnet die App selbst.
 
+
 Daten
 -----
 Alle Vorgänge, Scans und erzeugten Excel-Dateien liegen in
   Dokumente/Dotationslisten
-Nichts verlässt den Rechner. Der Ordner lässt sich über das Menüleisten-Symbol ändern
-(z. B. auf ein NAS). Bitte regelmäßig sichern (Time Machine oder NAS).
+Darin stehen Namen und IBANs – den Mac mit einem Kennwort schützen und den Ordner
+regelmäßig sichern (Time Machine oder NAS). Beim Löschen der App bleibt er erhalten.
 
-Scanner: Den Ordner „Dokumente/Dotationslisten/eingang“ als Scan-Ziel einrichten
-(z. B. über die Dateifreigabe des Macs) – neue PDFs werden automatisch eingelesen.
+Der Ordner lässt sich über das Menüleisten-Symbol ändern, z. B. auf ein NAS. Bestehende
+Vorgänge dann selbst in den neuen Ordner kopieren. Immer nur ein Rechner gleichzeitig
+sollte mit demselben Ordner arbeiten.
+
+Scanner: Den Ordner „eingang“ im Datenordner als Scan-Ziel einrichten (z. B. über die
+Dateifreigabe des Macs oder auf dem NAS) – neue PDFs werden automatisch eingelesen.
+
+
+Aktualisieren
+-------------
+Gibt es eine neue Version, zeigt die App oben einen Hinweis. Die neue DMG laden und die
+App in „Programme“ ersetzen – die Daten bleiben erhalten.
+
+
+Probleme
+--------
+- Seite öffnet sich nicht: Menüleisten-Symbol → „Öffnen“; fehlt das Symbol, App neu
+  starten.
+- „… ist noch geöffnet“: die Excel-Datei in Excel schließen und erneut erzeugen.
+- Fehler: Menüleisten-Symbol → „Protokoll anzeigen“.
 
 Unterstützen: https://buymeacoffee.com/rvalley98

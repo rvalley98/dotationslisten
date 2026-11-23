@@ -2,7 +2,7 @@
 
 The base file is the year's Verwendungsnachweis as filled so far (Raumkosten, rows typed by
 hand, the Zuwendung). The app never changes it: it writes base + finished Vorgänge into a new
-file and lets LibreOffice calculate the summary (Übungen / Ausbildung / Verwaltung, 60 % check).
+file and calculates the summary (app/formulas.py) (Übungen / Ausbildung / Verwaltung, 60 % check).
 
 Kosten columns (unlocked, rows 82-559; rows 2-81 are linked to the Raumkosten sheet):
 D Gliederungsnummer, E Art (Ausbildung/Übung/Verwaltung), F Thema, G Ort, H Datum,

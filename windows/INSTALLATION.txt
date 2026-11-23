@@ -1,43 +1,87 @@
 Dotationslisten – Installation unter Windows
 ============================================
 
+Dotationslisten erfasst die Abrechnungen des Katastrophenschutzes (Veranstaltungsabrechnung,
+Teilnehmerliste, Tagegeld, Fahrtkosten, Tauchprotokoll): Papierbögen scannen, Werte prüfen,
+die Excel-Vorlage und den Verwendungsnachweis automatisch befüllen. Alles läuft auf diesem
+PC – nichts wird ins Internet hochgeladen.
+
 Voraussetzung: Windows 10 oder 11 (64 Bit). Administratorrechte sind nicht nötig.
 
+
+Installieren
+------------
 1. „Dotationslisten-Setup-….exe“ starten.
    Windows zeigt eventuell „Der Computer wurde durch Windows geschützt“ (SmartScreen),
-   weil die App nicht bei Microsoft registriert ist: „Weitere Informationen“ →
-   „Trotzdem ausführen“. Das ist nur einmal nötig.
+   weil die App nicht bei Microsoft registriert ist (das kostet eine jährliche Gebühr):
+   „Weitere Informationen“ → „Trotzdem ausführen“. Das ist nur einmal nötig.
 
-2. Die App öffnet sich im Browser (http://127.0.0.1:8765). Unten rechts in der Taskleiste
-   erscheint ein kleines rotes Symbol (ggf. unter dem Pfeil ^): darüber öffnen,
-   Datenordner zeigen, beenden. Gestartet wird sie über das Startmenü.
+2. Die App öffnet sich im Browser (http://127.0.0.1:8765 – diese Adresse funktioniert
+   nur auf diesem PC). Unten rechts in der Taskleiste erscheint ein kleines rotes Symbol
+   (ggf. unter dem Pfeil ^): Öffnen, Datenordner zeigen, Datenordner ändern, Protokoll
+   anzeigen, Beenden. Gestartet wird die App über das Startmenü. Schließt man nur den
+   Browser-Tab, läuft sie im Hintergrund weiter.
 
-3. Einmalig die Excel-Vorlage hochladen (Startseite) – am besten als .xlsx.
+3. Einmalig die Excel-Vorlage der Abrechnung hochladen (Startseite), am besten als .xlsx.
    Eine .xls-Vorlage in Excel öffnen und „Speichern unter → Excel-Arbeitsmappe (.xlsx)“.
 
-Optional (kostenlos):
 
-- Ollama – Handschrifterkennung auf dem eigenen PC (ohne Ollama werden die Werte von
-  Hand eingetragen): https://ollama.com/download
+Erste Abrechnung
+----------------
+1. Alle Bögen einer Veranstaltung als ein PDF scannen und auf der Startseite hochladen.
+   Reihenfolge, Leerseiten und gedrehte Blätter sind egal.
+2. Ist Ollama installiert (siehe unten), liest die App die Handschrift automatisch.
+   Sonst den Vorgang öffnen und die Werte von Hand eintragen.
+3. Jedes Blatt prüfen – rot markierte Felder passen nicht – und „Speichern“.
+4. „Excel erzeugen“. Die fertige Datei liegt im Ordner „ausgang“.
+
+Für den Verwendungsnachweis die Datei des Jahres („Anlage 3“) unter „Verwendungsnachweis“
+hochladen; die App trägt alle fertigen Ausbildungen und Übungen ein und rechnet nach.
+
+
+Optional (kostenlos, die App zeigt fehlende Teile oben auf der Seite an)
+------------------------------------------------------------------------
+- Ollama – liest die Handschrift, ebenfalls nur auf diesem PC:
+  https://ollama.com/download
   Danach in der App auf „Modell jetzt laden“ klicken (einmalig ca. 6 GB).
-  Empfohlen: mindestens 16 GB Arbeitsspeicher; ohne starke Grafikkarte ist die
-  Erkennung langsam (mehrere Minuten pro Seite).
-- LibreOffice – nur nötig, um .xls-Dateien direkt einzulesen:
+  Empfohlen: mindestens 16 GB Arbeitsspeicher; ohne starke Grafikkarte dauert eine
+  Seite mehrere Minuten. Ohne Ollama werden die Werte von Hand eingetragen, alles andere
+  funktioniert genauso.
+- LibreOffice – nur nötig, um alte .xls-Dateien direkt einzulesen:
   https://de.libreoffice.org/download/download/
 
 Microsoft Excel und LibreOffice öffnen die erzeugten Dateien gleichermaßen; die Summen
 rechnet die App selbst.
 
+
 Daten
 -----
 Alle Vorgänge, Scans und erzeugten Excel-Dateien liegen in
   Dokumente\Dotationslisten
-(liegt „Dokumente“ in OneDrive, dann in C:\Benutzer\<Name>\Dotationslisten, damit
-nichts ungefragt in die Cloud synchronisiert wird). Nichts verlässt den Rechner.
-Der Ordner lässt sich über das Taskleisten-Symbol ändern (z. B. auf ein NAS).
-Bitte regelmäßig sichern. Beim Deinstallieren bleibt der Datenordner erhalten.
+(liegt „Dokumente“ in OneDrive, dann in C:\Benutzer\<Name>\Dotationslisten, damit nichts
+ungefragt in die Cloud synchronisiert wird). Darin stehen Namen und IBANs – den PC mit
+einem Kennwort schützen und den Ordner regelmäßig sichern. Beim Deinstallieren bleibt der
+Datenordner erhalten.
 
-Scanner: Den Ordner „eingang“ im Datenordner als Scan-Ziel einrichten – neue PDFs
-werden automatisch eingelesen.
+Der Ordner lässt sich über das Taskleisten-Symbol ändern, z. B. auf ein NAS. Bestehende
+Vorgänge dann selbst in den neuen Ordner kopieren. Immer nur ein Rechner gleichzeitig
+sollte mit demselben Ordner arbeiten.
+
+Scanner: Den Ordner „eingang“ im Datenordner (oder auf dem NAS) als Scan-Ziel
+einrichten – neue PDFs werden automatisch eingelesen.
+
+
+Aktualisieren
+-------------
+Gibt es eine neue Version, zeigt die App oben einen Hinweis. Das neue Setup einfach
+ausführen – die Daten bleiben erhalten.
+
+
+Probleme
+--------
+- Seite öffnet sich nicht: Taskleisten-Symbol → „Öffnen“; fehlt das Symbol, die App über
+  das Startmenü neu starten.
+- „… ist noch geöffnet“: die Excel-Datei in Excel schließen und erneut erzeugen.
+- Fehler: Taskleisten-Symbol → „Protokoll anzeigen“.
 
 Unterstützen: https://buymeacoffee.com/rvalley98
