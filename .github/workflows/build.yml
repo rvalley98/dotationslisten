@@ -67,7 +67,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: choco install tesseract innosetup -y --no-progress
+      # the Chocolatey feed times out now and then (504): retry, and fail here if it never works
+      - run: |
+          for ($i = 1; $i -le 5; $i++) {
+            choco install tesseract innosetup -y --no-progress
+            if (Test-Path "$env:ProgramFiles\Tesseract-OCR\tesseract.exe") { exit 0 }
+            Write-Host "Tesseract nicht installiert ($i/5), neuer Versuch"; Start-Sleep -Seconds (30 * $i)
+          }
+          exit 1
       - uses: actions/cache@v4
         with:
           path: windows/build/ollama-src
