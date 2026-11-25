@@ -67,3 +67,42 @@ def test_web_import_xls_and_duplicate(template_xlsx, data_dir, monkeypatch):
 
         client.post(f"/vorgang/{job['id']}/export", data={"back": "1"})
         assert J.load(job["id"])["export"]["summen"]["gesamt"] is not None
+
+
+@pytest.mark.parametrize("edit", ["tagegelder_geleert", "teilnehmer_leer", "tagegelder_getippt", "tagegeld_eine_zeile_hoeher"])
+def test_import_is_the_excel_and_keeps_its_totals(template_xlsx, data_dir, monkeypatch, edit):
+    """The imported file is the Vorgang's Excel (with its totals); a later "Excel erzeugen"
+    gives the same totals even where the file was changed by hand against the formulas."""
+    import copy
+    from app import config as C
+    from app import verwendungsnachweis as VN
+
+    monkeypatch.setenv("WORKER", "0")
+    from app import main
+
+    data = copy.deepcopy(DATA)
+    data["tagegeld"] = {"fields": {"ausserhalb_gemeinde": "JA", "teilnehmer_tagegeld": "2"}}
+    src = data_dir / "abrechnung.xlsx"
+    W.fill(C.VORLAGE_LEER, data, src)
+    wb = openpyxl.load_workbook(src)
+    if edit == "tagegelder_geleert":
+        wb["Abrechnungsbogen"]["G17"].value = None
+    elif edit == "teilnehmer_leer":
+        wb["Tagegeld_Aufwandsvergütung"]["F15"].value = None
+    elif edit == "tagegelder_getippt":
+        wb["Abrechnungsbogen"]["G17"].value = 30
+    else:  # older files: the Tagegeld link in "Gezahlte Aufwandvergütungen", Tagegelder empty
+        wb["Abrechnungsbogen"]["G16"].value = "=Tagegeld_Aufwandsvergütung!H19"
+        wb["Abrechnungsbogen"]["G17"].value = None
+    wb.save(src)
+    want = VN.abrechnung_summen(src)["gesamt"]
+
+    job_id = importer.import_file(src, "abrechnung.xlsx")
+    job = J.load(job_id)
+    assert job["export"]["summen"]["gesamt"] == want
+    assert (C.AUSGANG / job["export"]["file"]).read_bytes() == src.read_bytes()
+    assert not main._needs_export(job)
+    assert importer.import_file(src, "nochmal.xlsx") is None
+
+    main._export_sync(job_id)  # e.g. after a correction
+    assert J.load(job_id)["export"]["summen"]["gesamt"] == want

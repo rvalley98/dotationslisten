@@ -61,13 +61,17 @@ def _hint(label: str, typ: str, options: tuple[str, ...] = ()) -> str:
     return f"{label} ({hint})" if hint else label
 
 
+def _read(sheet: F.Sheet) -> list[F.Field]:
+    return [f for f in sheet.fields if f.read]
+
+
 def schema(sheet: F.Sheet) -> dict[str, Any]:
     props: dict[str, Any] = {}
     if sheet.fields:
         props["fields"] = {
             "type": "object",
-            "properties": {f.key: {"type": "string", "description": _hint(f.label, f.type, f.options)} for f in sheet.fields},
-            "required": [f.key for f in sheet.fields],
+            "properties": {f.key: {"type": "string", "description": _hint(f.label, f.type, f.options)} for f in _read(sheet)},
+            "required": [f.key for f in _read(sheet)],
         }
     if sheet.tables:
         props["tables"] = {
@@ -102,7 +106,7 @@ def prompt(sheet: F.Sheet) -> str:
     ]
     if sheet.fields:
         lines.append("Felder:")
-        lines += [f"- {f.key}: {_hint(f.label, f.type, f.options)}" for f in sheet.fields]
+        lines += [f"- {f.key}: {_hint(f.label, f.type, f.options)}" for f in _read(sheet)]
     for t in sheet.tables:
         cols = ", ".join(f"{k} = {_hint(lbl, typ)}" for k, lbl, _c, typ in t.columns)
         lines.append(f"Tabelle {t.key} „{t.label}“ (max. {t.rows} Zeilen): {cols}")

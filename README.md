@@ -142,7 +142,13 @@ Weitergeben oder Nachbearbeiten. Wird ein Vorgang danach noch geändert, weist d
 dass die Excel-Datei neu erzeugt werden sollte. „Alle neu erzeugen“ macht das für alle Vorgänge auf einmal.
 
 Außerdem: Abrechnungen ganz ohne Scan von Hand anlegen und bestehende Excel-Abrechnungen
-(auch aus den Vorjahren) importieren.
+(auch aus den Vorjahren, .xlsx oder .xls) importieren. Eine importierte Datei ist die fertige
+Excel des Vorgangs: Sie landet unverändert in `ausgang` (eine .xls als .xlsx), ihre Summen gehen
+in den Verwendungsnachweis, und „Alle neu erzeugen“ lässt sie in Ruhe. Was in der Datei von Hand
+geändert wurde – ein geleertes oder überschriebenes Feld „Gezahlte Tagegelder“, eine leere
+Teilnehmeranzahl, eine Formel in einem Eingabefeld –, wird so übernommen, dass auch ein späteres
+„Excel erzeugen“ dieselben Summen ergibt. Dieselbe Datei zweimal zu importieren legt keinen
+zweiten Vorgang an.
 
 ### 5. Verwendungsnachweis
 

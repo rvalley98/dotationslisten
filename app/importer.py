@@ -3,6 +3,11 @@
 The input cells of the field map are read back into the raw text form the review UI uses
 ("17.10.2026", "07:30", "12,50", "100" for 100 %), so an imported Vorgang behaves like one
 entered by hand. Formulas are never imported - the export recalculates everything.
+
+The imported file is the Vorgang's Excel: it goes to "ausgang" as it is (an .xls as the .xlsx
+LibreOffice makes of it) and its totals go into the Verwendungsnachweis. The values are read so
+that a later "Excel erzeugen" gives the same totals: a formula cell that was emptied in Excel
+(e.g. "Gezahlte Tagegelder") becomes 0, and the Teilnehmeranzahl is not filled in by the app.
 """
 
 from __future__ import annotations
@@ -11,6 +16,7 @@ import datetime as dt
 import hashlib
 import shutil
 import tempfile
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -19,10 +25,18 @@ import openpyxl
 from . import config as C
 from . import tools as T
 from . import fields as F
+from . import formulas as XF
 from . import jobs as J
+from . import verwendungsnachweis as VN
+from . import workbook as W
 
 SUFFIXES = {".xlsx", ".xls"}
 IMPORT = "import"  # page kind
+_lock = threading.Lock()  # two uploads of the same file at once must not both pass the check
+
+
+def is_import(job: dict[str, Any]) -> bool:
+    return any(p.get("kind") == IMPORT for p in job.get("pages", []))
 
 
 def _num(v: float, decimals: int = 2) -> str:
@@ -64,14 +78,47 @@ def to_raw(value: Any, typ: str) -> str:
     return str(value).strip()
 
 
-def read_data(wb: openpyxl.Workbook) -> dict[str, Any]:
-    """{sheet_key: {"fields": ..., "tables": ...}} for every template sheet that holds a value."""
+def _is_formula(v: Any) -> bool:
+    return isinstance(v, str) and v.startswith("=")
+
+
+def formula_refs(wb: openpyxl.Workbook) -> list[str]:
+    """Cells whose calculated value read_data needs: the targets of the fields' own formulas
+    and every input cell that holds some other formula in this file."""
+    refs = []
+    for sheet in F.SHEETS:
+        if sheet.name not in wb.sheetnames:
+            continue
+        ws = wb[sheet.name]
+        for f in sheet.fields:
+            if f.formula:
+                refs.append(f.formula.lstrip("="))
+            if _is_formula(ws[f.cell].value) and ws[f.cell].value != f.formula:
+                refs.append(f"{sheet.name}!{f.cell}")
+    return refs
+
+
+def read_data(wb: openpyxl.Workbook, values: dict[str, Any] | None = None) -> dict[str, Any]:
+    """{sheet_key: {"fields": ..., "tables": ...}} for every template sheet that holds a value.
+    values: the calculated values of formula_refs(wb). An input cell keeps what it gave in the
+    file: its own formula stays a formula (""), another formula becomes its value, a formula
+    cell emptied in Excel becomes 0."""
+    values = values or {}
     data: dict[str, Any] = {}
     for sheet in F.SHEETS:
         if sheet.name not in wb.sheetnames:
             continue
         ws = wb[sheet.name]
-        fields = {f.key: to_raw(ws[f.cell].value, f.type) for f in sheet.fields}
+        fields = {}
+        for f in sheet.fields:
+            v = ws[f.cell].value
+            if _is_formula(v) and v != f.formula:
+                v = values.get(f"{sheet.name}!{f.cell}")  # e.g. the Tagegeld link one row too high
+                if isinstance(v, XF.XLError):
+                    v = None
+            fields[f.key] = to_raw(v, f.type)
+            if f.formula and v in (None, "") and values.get(f.formula.lstrip("=")) not in (None, "", 0):
+                fields[f.key] = "0"  # emptied in Excel: the export must not bring the formula back
         tables = {}
         for t in sheet.tables:
             rows = []
@@ -86,31 +133,41 @@ def read_data(wb: openpyxl.Workbook) -> dict[str, Any]:
     return data
 
 
-def _load(path: Path) -> openpyxl.Workbook:
+def _as_xlsx(path: Path, tmp: Path) -> Path:
     if path.suffix.lower() == ".xlsx":
-        return openpyxl.load_workbook(path)
+        return path
     if not C.soffice_available():
         raise ValueError(".xls-Dateien brauchen LibreOffice (kostenlos: libreoffice.org) – oder in Excel als .xlsx speichern")
-    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:  # .xls -> .xlsx (LibreOffice)
-        src = Path(tmp) / "in" / ("abrechnung" + path.suffix.lower())
-        src.parent.mkdir()
-        shutil.copy(path, src)
-        return openpyxl.load_workbook(T.soffice_convert(src, Path(tmp) / "out"))
+    src = tmp / "in" / ("abrechnung" + path.suffix.lower())  # .xls -> .xlsx (LibreOffice)
+    src.parent.mkdir()
+    shutil.copy(path, src)
+    return T.soffice_convert(src, tmp / "out")
 
 
 def import_file(path: Path, name: str) -> str | None:
-    """Excel file -> new Vorgang (all sheets marked as geprüft). Returns the job id, or None if
-    the same file was imported before."""
+    """Excel file -> new Vorgang (all sheets marked as geprüft, the file itself as its Excel).
+    Returns the job id, or None if the same file was imported before."""
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     if any(j.get("source_hash") == digest for j in J.all_jobs()):
         return None
-    wb = _load(path)
-    if "Abrechnungsbogen" not in wb.sheetnames:
-        raise ValueError("kein Abrechnungsbogen in der Datei")
-    data = read_data(wb)
-    job = J.new_manual_job(list(data))
-    for p in job["pages"]:
-        p["kind"] = IMPORT
-    job.update(source=f"Import: {name}", source_hash=digest, data=data, reviewed=list(data))
-    J.save(job)
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        xlsx = _as_xlsx(path, Path(tmp))
+        wb = openpyxl.load_workbook(xlsx)
+        if "Abrechnungsbogen" not in wb.sheetnames:
+            raise ValueError("kein Abrechnungsbogen in der Datei")
+        data = read_data(wb, W.calculate(xlsx, formula_refs(wb)))
+        summen = VN.abrechnung_summen(xlsx)
+        with _lock:
+            if any(j.get("source_hash") == digest for j in J.all_jobs()):
+                return None
+            job = J.new_manual_job(list(data))
+            for p in job["pages"]:
+                p["kind"] = IMPORT
+            job.update(source=f"Import: {name}", source_hash=digest, data=data, reviewed=list(data))
+            out = J.export_name(job)
+            C.AUSGANG.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(xlsx, C.AUSGANG / out)
+            job["export"] = {"file": out, "problems": [], "at": J._now(), "summen": summen, "import": True}
+            J.save(job)
+            shutil.copyfile(path, J.job_dir(job["id"]) / ("original" + path.suffix.lower()))
     return job["id"]

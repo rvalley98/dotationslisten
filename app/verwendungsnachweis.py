@@ -70,6 +70,9 @@ def abrechnung_summen(xlsx: Path) -> dict[str, Any]:
     for k in ("gesamt", "anteil", "kats"):
         if out[k] is not None and not isinstance(out[k], (int, float)):
             out[k] = None
+    for k in ("gesamt", "kats"):  # floating point noise: 6.800000000000001 -> 6.8
+        if isinstance(out[k], float):
+            out[k] = _plain(round(out[k], 6))
     return out
 
 

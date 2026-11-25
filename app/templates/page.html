@@ -130,6 +130,7 @@ table.t td { padding:3px 4px; border:0; } table.t th { padding:3px 4px; }
       </form>
       {% if job.export and job.export.problems %}
       <ul class="small err">{% for p in job.export.problems %}<li>{{ p }} – Zelle leer gelassen</li>{% endfor %}</ul>
+      {% elif job.export and job.export.import %}<p class="small ok">Die importierte Datei (übernommen {{ job.export.at.replace('T', ' ')[:16] }}).</p>
       {% elif job.export %}<p class="small ok">Erzeugt {{ job.export.at.replace('T', ' ')[:16] }}. Excel rechnet beim Öffnen alle Formeln neu.</p>{% endif %}
       {% if job.export and job.export.veraltet %}<p class="small warn">Nach dem Export geändert – Excel neu erzeugen, damit die Summen stimmen.</p>{% endif %}
       {% if job.export and job.export.summen %}{% set s = job.export.summen %}

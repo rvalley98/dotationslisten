@@ -383,7 +383,8 @@ def _export_sync(job_id: str) -> None:
     job = _job(job_id)
     name = J.export_name(job)
     data = copy.deepcopy(job["data"])
-    rules.apply_teilnehmeranzahl(data, only_if_empty=True)
+    if not importer.is_import(job):  # imported: as in the file, an empty Teilnehmeranzahl stays empty
+        rules.apply_teilnehmeranzahl(data, only_if_empty=True)
     problems = W.fill(C.VORLAGE_LEER, data, C.AUSGANG / name)
     try:
         summen = VN.abrechnung_summen(C.AUSGANG / name)
@@ -468,7 +469,9 @@ async def export_many(request: Request):
             return RedirectResponse("/", 303)
         jobs = [j for j in J.all_jobs() if any(p.get("sheet") for p in j["pages"])]
         waiting = [j for j in jobs if any(p.get("recog") == J.R_OPEN for p in j["pages"])]
-        todo = [j["id"] for j in jobs if j not in waiting and (mode == "alle" or _needs_export(j))]
+        # "alle" keeps the files of imported Vorgänge (still unchanged): they are the originals
+        todo = [j["id"] for j in jobs if j not in waiting
+                and (_needs_export(j) or (mode == "alle" and not (j.get("export") or {}).get("import")))]
         bulk.clear()
         bulk.update(running=bool(todo), mode=mode, total=len(todo), done=0, errors=[], current=None,
                     waiting=len(waiting), finished=None if todo else J._now())

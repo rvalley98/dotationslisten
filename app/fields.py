@@ -31,6 +31,7 @@ class Field:
     options: tuple[str, ...] = ()
     default: str | None = None  # used when the paper leaves the field empty
     formula: str | None = None  # written instead when the paper leaves the field empty
+    read: bool = True  # asked from the recognition model (False: the formula is the usual value)
 
 
 @dataclass(frozen=True)
@@ -82,6 +83,9 @@ ABRECHNUNG = Sheet(
         # the template links G17 (Tagegelder) to the Tagegeld sheet but not G16 - done here
         Field("aufwandverguetungen", "Gezahlte Aufwandvergütungen", "G16", MONEY,
               formula="=Tagegeld_Aufwandsvergütung!H27"),
+        # linked to the Tagegeld sheet; can be overwritten in Excel (imported Abrechnungen)
+        Field("tagegelder", "Gezahlte Tagegelder", "G17", MONEY,
+              formula="=Tagegeld_Aufwandsvergütung!H19", read=False),
         Field("anteil_kats", "Anteil KatS (%)", "G27", PERCENT, default="100"),
     ),
     tables=(

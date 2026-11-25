@@ -5,7 +5,7 @@ import openpyxl
 from app import fields as F
 
 # unlocked in the template but a formula or an image area -> never written
-NOT_INPUT = {("Abrechnungsbogen", "G17"), ("Belege", "A12")}
+NOT_INPUT = {("Belege", "A12")}
 
 
 def unlocked_anchor_cells(ws):
@@ -32,6 +32,9 @@ def test_field_map_matches_unlocked_cells(template_xlsx):
 def test_no_input_cell_holds_a_formula(template_xlsx):
     wb = openpyxl.load_workbook(template_xlsx)
     for sheet in F.SHEETS:
+        formulas = {f.cell: f.formula for f in sheet.fields}
         for cell in F.all_input_cells(sheet):
             v = wb[sheet.name][cell].value
+            if v is not None and v == formulas.get(cell):
+                continue  # the field's own formula (Tagegelder), written back when left empty
             assert not (isinstance(v, str) and v.startswith("=")), f"{sheet.name}!{cell}"
