@@ -67,14 +67,23 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      # the Chocolatey feed times out now and then (504): retry, and fail here if it never works
-      - run: |
+      # Tesseract (UB Mannheim build) straight from the GitHub release of tesseract-ocr, pinned
+      # by SHA-256 - the Chocolatey feed is down now and then. Inno Setup is on the runner image.
+      - name: Install Tesseract
+        run: |
+          $url = "https://github.com/tesseract-ocr/tesseract/releases/download/5.5.3/tesseract-ocr-w64-setup-5.5.3.20260724.exe"
+          $sha = "bee9e3434bd94fd65387d9be28cd467a41f61b1275383b55b0f59a1331270ae4"
+          $exe = "$env:RUNNER_TEMP\tesseract-setup.exe"
           for ($i = 1; $i -le 5; $i++) {
-            choco install tesseract innosetup -y --no-progress
-            if (Test-Path "$env:ProgramFiles\Tesseract-OCR\tesseract.exe") { exit 0 }
-            Write-Host "Tesseract nicht installiert ($i/5), neuer Versuch"; Start-Sleep -Seconds (30 * $i)
+            try { Invoke-WebRequest $url -OutFile $exe -UseBasicParsing; break }
+            catch { if ($i -eq 5) { throw }; Start-Sleep -Seconds (10 * $i) }
           }
-          exit 1
+          if ((Get-FileHash $exe -Algorithm SHA256).Hash -ne $sha) { throw "Prüfsumme des Tesseract-Setups stimmt nicht" }
+          Start-Process $exe -ArgumentList "/S" -Wait
+          if (-not (Test-Path "$env:ProgramFiles\Tesseract-OCR\tesseract.exe")) { throw "Tesseract nicht installiert" }
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue) -and -not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup -y --no-progress
+          }
       - uses: actions/cache@v4
         with:
           path: windows/build/ollama-src
