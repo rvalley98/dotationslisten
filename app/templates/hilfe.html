@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block main %}
+<style>
+  .help h2 { margin:0 0 4px; }
+  .help h3 { margin:18px 0 4px; font-size:16px; }
+  .help p, .help li { line-height:1.5; }
+  .help ol, .help ul { padding-left:22px; margin:6px 0; }
+  .help .step { display:inline-block; min-width:1.6em; height:1.6em; line-height:1.6em; text-align:center; border-radius:50%;
+                background:var(--soft); font-weight:600; margin-right:6px; }
+  .help details { border-top:1px solid var(--line); padding:8px 0; }
+  .help details:last-of-type { border-bottom:1px solid var(--line); }
+  .help summary { cursor:pointer; font-weight:600; }
+  .help details > div { margin:6px 0 2px 18px; }
+  .help .toc a { margin-right:14px; }
+</style>
+<div class="help">
+<div class="card">
+  <h1 style="margin-top:0">Hilfe</h1>
+  <p class="toc small"><a href="#anleitung">Anleitung</a><a href="#faq">Häufige Fragen</a></p>
+  <p>Dotationslisten nimmt das Abtippen der KatS-Abrechnungen ab: Papierbögen scannen, Werte prüfen, daraus die
+    Excel-Abrechnung erzeugen – und am Jahresende alle fertigen Abrechnungen mit einem Klick in den
+    Verwendungsnachweis übernehmen. Alles läuft auf diesem Rechner.</p>
+</div>
+
+<div class="card" id="anleitung">
+  <h2>Anleitung</h2>
+
+  <h3><span class="step">1</span>Einmalig einrichten</h3>
+  <ol>
+    <li><b>Excel-Vorlage hochladen</b> – auf der Startseite unter „Vorlage einrichten“ die Abrechnungsvorlage der
+      Gliederung (z. B. „20250105 Muster.xls“ oder als .xlsx). Die Beispieleinträge des Musters entfernt die App,
+      die Formeln bleiben. Kommt eine neue Fassung der Vorlage, einfach erneut hochladen.</li>
+    <li><b>Handschrifterkennung</b> (empfohlen) – oben auf „Modell jetzt laden“ klicken (ca. 6 GB, einmalig).
+      Danach füllt die App die Felder aus den Scans selbst vor. Ohne Modell geht alles genauso, die Werte werden
+      dann von Hand eingetragen.</li>
+    <li><b>Scanner einrichten</b> (optional) – als Scan-Ziel den Ordner <code>eingang</code> im Datenordner wählen
+      (Datenordner über das Symbol in der Menü- bzw. Taskleiste → „Datenordner zeigen“). Neue PDFs liest die App
+      dann von selbst ein.</li>
+  </ol>
+
+  <h3><span class="step">2</span>Bei der Veranstaltung</h3>
+  <ul>
+    <li>Die Bögen der Vorlage ausdrucken und wie gewohnt ausfüllen: Veranstaltungsabrechnung, Teilnehmerliste,
+      Tagegeld/Aufwandsvergütung, Fahrtkosten (je Fahrer ein Blatt), bei Tauchübungen das Tauchprotokoll.</li>
+    <li>Den <b>gedruckten Titel</b> oben auf jedem Blatt nicht abschneiden oder überschreiben – daran erkennt die App,
+      welches Blatt es ist.</li>
+    <li>Wer Tagegeld bzw. Aufwandsvergütung bekommt, <b>unterschreibt auf dem Tagegeld-Blatt</b> – die App zählt die
+      Unterschriften und trägt die Anzahl ein.</li>
+    <li>Deutlich schreiben, vor allem Zahlen, Datum, Kennzeichen und IBAN.</li>
+  </ul>
+
+  <h3><span class="step">3</span>Scannen und einlesen</h3>
+  <ul>
+    <li>Alle Bögen einer Veranstaltung als <b>ein PDF</b> scannen. Reihenfolge, Leerseiten und auf dem Kopf liegende
+      Blätter sind egal. Mehrere Veranstaltungen in einem Stapel trennt die App an den Veranstaltungsabrechnungen.</li>
+    <li>Auf der Startseite „Scans hochladen“ – oder der Scanner legt die Datei in den Ordner <code>eingang</code>.</li>
+    <li>Die Liste der Vorgänge aktualisiert sich nicht von selbst: Seite neu laden.</li>
+  </ul>
+
+  <h3><span class="step">4</span>Prüfen</h3>
+  <ol>
+    <li>Den Vorgang auf der Startseite öffnen. Links steht der Scan, rechts die Felder.</li>
+    <li>Stimmt das Blatt oben („Blatt:“) nicht, das richtige auswählen. Fehlt ein Blatt, unten „Blatt hinzufügen“.</li>
+    <li>Jedes Feld mit dem Scan vergleichen. <span class="err">Rot</span> markiert ist, was nicht passt (Datum, Betrag,
+      Prozent nicht lesbar, ja/nein falsch, IBAN-Prüfziffer falsch, unbekannte Gliederungsnummer).</li>
+    <li>„Speichern &amp; weiter“ – damit gilt das Blatt als geprüft. „Neu erkennen“ liest eine Seite noch einmal
+      (die Werte dieser Seite werden ersetzt).</li>
+  </ol>
+
+  <h3><span class="step">5</span>Excel erzeugen</h3>
+  <ul>
+    <li>Auf der letzten Seite „Speichern &amp; Excel erzeugen“ oder in der Vorgangsübersicht „Excel erzeugen“.
+      Für viele Vorgänge auf einmal: auf der Startseite „Fehlende erzeugen“.</li>
+    <li>Die Datei liegt im Ordner <code>ausgang</code> („JJJJMMTT Thema (…).xlsx“) und lässt sich herunterladen,
+      ausdrucken und weitergeben wie eine von Hand ausgefüllte Vorlage.</li>
+    <li>Wird der Vorgang danach geändert, weist die App darauf hin: Excel neu erzeugen, damit die Summen stimmen.</li>
+  </ul>
+
+  <h3><span class="step">6</span>Ohne Scan: von Hand anlegen oder importieren</h3>
+  <ul>
+    <li><b>Von Hand:</b> Startseite → „Neue Abrechnung ohne Scan von Hand anlegen“, Blätter auswählen, „Abrechnung
+      anlegen“, Werte eintragen.</li>
+    <li><b>Vorhandene Excel-Abrechnungen</b> (auch aus den Vorjahren): Startseite → „Bestehende Abrechnungen aus
+      Excel importieren“, mehrere Dateien auf einmal möglich. Die Datei gilt danach als fertige Excel des Vorgangs.
+      Für .xls-Dateien wird LibreOffice (kostenlos) gebraucht – oder die Datei in Excel als .xlsx speichern.</li>
+  </ul>
+
+  <h3><span class="step">7</span>Verwendungsnachweis (Jahresende)</h3>
+  <ol>
+    <li>Reiter „Verwendungsnachweis“: die Datei des Jahres hochladen („Anlage 3 – Verwendungsnachweis mit
+      Raumkosten“), so wie sie bisher geführt wurde. Sie bleibt unverändert; die App erzeugt eine neue Datei.</li>
+    <li><b>Einstellungen</b> prüfen: Zuwendung (Anteil der Gliederung lt. Binnenverteilung) und Mindestanteil
+      Ausbildung + Übung (voreingestellt 60 %).</li>
+    <li>Reiter <a href="/raumkosten">„Raum- &amp; Verwaltungskosten“</a>: Gebäude und Räume mit Nutzungsart, Größe, Miete
+      pro qm und KatS-Anteil prüfen und bei Bedarf ändern. Daraus ergeben sich die Verwaltungskosten.</li>
+    <li>„Neu berechnen &amp; Datei erzeugen“. Die Übersicht zeigt Übungen, Ausbildung, Verwaltung und ob die Prüfungen
+      „i.O.“ sind; in der Liste darunter steht bei jedem Vorgang, ob er eingetragen wurde – oder warum nicht.</li>
+    <li>Die erzeugte Datei „Verwendungsnachweis &lt;Jahr&gt;.xlsx“ herunterladen und weitergeben.</li>
+  </ol>
+
+  <h3><span class="step">8</span>Daten sichern</h3>
+  <p>Alles liegt im Datenordner (<code>Dokumente/Dotationslisten</code>). Darin stehen Namen und IBANs: den Rechner mit
+    einem Kennwort schützen und den Ordner regelmäßig sichern (Time Machine, Windows-Dateiversionsverlauf oder NAS).</p>
+</div>
+
+<div class="card" id="faq">
+  <h2>Häufige Fragen</h2>
+
+  <details><summary>Verlassen meine Daten den Rechner?</summary><div>
+    Nein. Scans, Erkennung und Excel laufen lokal, die Oberfläche ist nur auf diesem Rechner erreichbar. Nach außen
+    geht nur die tägliche Abfrage, ob es eine neue Version gibt, und – auf Knopfdruck – der einmalige Download des
+    Erkennungsmodells. Beides enthält keine Abrechnungsdaten.</div></details>
+
+  <details><summary>Brauche ich Internet?</summary><div>
+    Nur einmal zum Laden des Erkennungsmodells und für den Hinweis auf neue Versionen. Alles andere läuft offline.</div></details>
+
+  <details><summary>Wo liegen meine Daten, und wie ziehe ich sie auf einen anderen Rechner oder ein NAS um?</summary><div>
+    Im Datenordner <code>Dokumente/Dotationslisten</code> (Windows mit OneDrive: <code>C:\Benutzer\&lt;Name&gt;\Dotationslisten</code>).
+    Über das Symbol in der Menü- bzw. Taskleiste → „Datenordner ändern …“ lässt sich ein anderer Ordner wählen,
+    z. B. auf einem NAS; die bestehenden Vorgänge dann selbst in den neuen Ordner kopieren. Immer nur ein Rechner
+    gleichzeitig sollte mit demselben Ordner arbeiten.</div></details>
+
+  <details><summary>Die Handschrifterkennung ist langsam oder startet nicht.</summary><div>
+    Auf einem Mac mit Apple-Chip dauert eine Seite meist unter einer Minute, unter Windows mit Nvidia-Grafikkarte
+    ähnlich, ohne dauert es mehrere Minuten. Empfohlen sind 16 GB Arbeitsspeicher. Auf dem Mac braucht die Erkennung
+    macOS 14 oder neuer. Bleibt „Handschrifterkennung startet …“ stehen: App beenden und neu starten.</div></details>
+
+  <details><summary>Warum ist ein Feld rot?</summary><div>
+    Der Wert passt nicht zum Feld: kein gültiges Datum, keine Uhrzeit, kein Betrag, ein nicht erlaubter Wert bei
+    ja/nein oder einer Auswahl, eine IBAN mit falscher Prüfziffer oder eine Gliederungsnummer, die nicht in der
+    Liste der Vorlage steht. Mit dem Scan vergleichen und korrigieren.</div></details>
+
+  <details><summary>Eine Seite wurde dem falschen Blatt zugeordnet.</summary><div>
+    Auf der Seite oben bei „Blatt:“ das richtige auswählen. Meist war der gedruckte Titel abgeschnitten oder stark
+    verschmutzt.</div></details>
+
+  <details><summary>Woher kommt die Teilnehmeranzahl beim Tagegeld?</summary><div>
+    Die App zählt die Unterschriften auf dem Tagegeld-Blatt, ersatzweise die Namen auf der Teilnehmerliste, und trägt
+    sie bei Tagegeld (außerhalb der Gemeinde = JA) oder Aufwandsvergütung (NEIN) ein. Der Wert lässt sich ändern.</div></details>
+
+  <details><summary>Ich habe nach „Excel erzeugen“ noch etwas geändert.</summary><div>
+    Die App markiert den Vorgang („nach dem Export geändert“). Einfach „Excel erzeugen“ noch einmal klicken – die alte
+    Datei wird ersetzt. Erst dann geht der Vorgang mit den neuen Werten in den Verwendungsnachweis.</div></details>
+
+  <details><summary>„… ist noch geöffnet“ beim Erzeugen.</summary><div>
+    Die Excel-Datei ist in Excel oder LibreOffice offen. Dort schließen und erneut erzeugen.</div></details>
+
+  <details><summary>Warum fehlt ein Vorgang im Verwendungsnachweis?</summary><div>
+    Übernommen werden nur Vorgänge des Jahres der hochgeladenen Datei mit Art „Ausbildung“ oder „Übung“, bei denen alle
+    Blätter geprüft sind und deren Excel aktuell ist. In der Liste auf der Seite „Verwendungsnachweis“ steht bei jedem
+    Vorgang der Grund, z. B. „noch nicht alle Blätter geprüft“ oder „nicht aus 2026“.</div></details>
+
+  <details><summary>Wird ein Vorgang doppelt eingetragen, wenn er schon im Kostenblatt steht?</summary><div>
+    Nein, wenn Datum und Thema gleich sind – solche Zeilen überspringt die App. Steht derselbe Termin mit anders
+    geschriebenem Thema schon in der hochgeladenen Datei, wird er zusätzlich eingetragen; dann das Thema angleichen
+    oder die Zeile in der hochgeladenen Datei entfernen.</div></details>
+
+  <details><summary>Woher kommen die Verwaltungskosten?</summary><div>
+    Aus dem Blatt „Raumkosten“ des Verwendungsnachweises: jeder Raum mit Nutzungsart „Verwaltung“ mit seinem
+    KatS-Anteil (Größe × Miete pro qm × 12 + Anteil an den Nebenkosten). Bearbeiten im Reiter
+    <a href="/raumkosten">„Raum- &amp; Verwaltungskosten“</a>; die Änderungen gelten für die neu erzeugte Datei,
+    „Werte aus der Datei übernehmen“ macht sie rückgängig.</div></details>
+
+  <details><summary>Ich habe alte Abrechnungen als Excel-Dateien.</summary><div>
+    Auf der Startseite „Bestehende Abrechnungen aus Excel importieren“. Die Werte werden genau so übernommen, wie sie in
+    der Datei stehen – auch von Hand geänderte Felder. Dieselbe Datei wird nur einmal importiert.</div></details>
+
+  <details><summary>Wie aktualisiere ich die App?</summary><div>
+    Gibt es eine neue Version, zeigt die App oben einen Hinweis mit Link. Mac: die neue DMG laden und die App in
+    „Programme“ ersetzen. Windows: das neue Setup ausführen. Die Daten bleiben erhalten.</div></details>
+
+  <details><summary>Ich habe einen Fehler gefunden.</summary><div>
+    Unten auf jeder Seite „🐞 Fehler melden“ (oder im Menü des Symbols). Es öffnet ein Formular auf GitHub, Version und
+    Betriebssystem sind schon eingetragen. Bitte keine Namen, IBANs oder Abrechnungen anhängen. Hilfreich ist das
+    Protokoll (Symbol → „Protokoll anzeigen“) – vorher auf persönliche Daten prüfen.</div></details>
+</div>
+</div>
+{% endblock %}

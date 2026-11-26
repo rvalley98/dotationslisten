@@ -44,6 +44,7 @@ button.primary, .btn.primary { background:var(--accent); border-color:var(--acce
   <a href="/" class="small">Vorgänge</a>
   <a href="/verwendungsnachweis" class="small">Verwendungsnachweis</a>
   <a href="/raumkosten" class="small">Raum- &amp; Verwaltungskosten</a>
+  <a href="/hilfe" class="small">Hilfe</a>
   <div class="status">
     <span><i class="dot {{ 'ok' if status.template else 'err' }}"></i>Vorlage {{ 'bereit' if status.template else 'fehlt' }}</span>
     <span title="{{ status.recog_msg }}"><i class="dot {{ 'ok' if status.recog_ok else ('warn' if status.recog_enabled else '') }}"></i>{{ status.recog_msg }}{% if status.busy %} · {{ status.busy }}{% endif %}</span>

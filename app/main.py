@@ -546,6 +546,11 @@ def _vn_page(request: Request):
     return templates.TemplateResponse(request, "verwendungsnachweis.html", ctx)
 
 
+@app.get("/hilfe")
+def help_view(request: Request):
+    return templates.TemplateResponse(request, "hilfe.html", {"status": _status()})
+
+
 @app.get("/raumkosten")
 def rk_view(request: Request):
     return _rk_page(request)

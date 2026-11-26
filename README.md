@@ -99,6 +99,9 @@ LibreOffice gleichermaßen; alle Summen rechnet die App selbst.
 
 ## Arbeitsablauf
 
+In der App selbst gibt es dazu den Reiter **„Hilfe“** mit einer Schritt-für-Schritt-Anleitung und
+häufigen Fragen.
+
 ### 1. Vorlage hochladen (einmalig)
 
 Auf der Startseite die Excel-Vorlage der Abrechnung hochladen, am besten als `.xlsx` (eine `.xls`

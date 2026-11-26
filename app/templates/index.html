@@ -41,7 +41,7 @@
       <input type="file" name="files" multiple accept=".xlsx,.xls" required>
       <button class="primary">Importieren</button>
     </form>
-    <p class="small muted" style="margin:6px 0 0">Ausgefüllte Abrechnungen nach der Vorlage (.xlsx oder .xls, mehrere auf einmal). Die Eingabefelder werden übernommen, die Blätter gelten als geprüft. Danach „Fehlende erzeugen“, damit die Summen für den Verwendungsnachweis berechnet werden. Dieselbe Datei wird nur einmal importiert.</p>
+    <p class="small muted" style="margin:6px 0 0">Ausgefüllte Abrechnungen nach der Vorlage (.xlsx oder .xls, mehrere auf einmal). Die Werte werden so übernommen, wie sie in der Datei stehen, die Blätter gelten als geprüft und die Datei als fertige Excel des Vorgangs. Dieselbe Datei wird nur einmal importiert.</p>
   </details>
   {% if last_import.at %}
   <p class="small {{ 'err' if last_import.errors else 'ok' }}">Import: {{ last_import.ok|length }} übernommen{% if last_import.duplicate %}, {{ last_import.duplicate|length }} schon vorhanden ({{ last_import.duplicate|join(', ') }}){% endif %}{% if last_import.errors %}, {{ last_import.errors|length }} fehlgeschlagen{% endif %}.</p>
