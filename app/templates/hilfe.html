@@ -51,8 +51,12 @@
 
   <h3><span class="step">3</span>Scannen und einlesen</h3>
   <ul>
-    <li>Alle Bögen einer Veranstaltung als <b>ein PDF</b> scannen. Reihenfolge, Leerseiten und auf dem Kopf liegende
-      Blätter sind egal. Mehrere Veranstaltungen in einem Stapel trennt die App an den Veranstaltungsabrechnungen.</li>
+    <li>Alle Bögen einer Veranstaltung als <b>ein PDF</b> scannen. Innerhalb einer Veranstaltung sind Reihenfolge,
+      Leerseiten und auf dem Kopf liegende Blätter egal.</li>
+    <li><b>Ganzer Stapel auf einmal:</b> Ein PDF darf mehrere Veranstaltungen enthalten. Die App beginnt bei jedem
+      <b>Abrechnungsbogen</b> einen neuen Vorgang. Deshalb jede Veranstaltung <b>mit ihrem Abrechnungsbogen
+      beginnen</b> und ihre übrigen Blätter (Teilnehmerliste, Tagegeld, Fahrtkosten …) direkt dahinter legen. Blätter
+      vor dem ersten Abrechnungsbogen gehören zur ersten Veranstaltung.</li>
     <li>Auf der Startseite „Scans hochladen“ – oder der Scanner legt die Datei in den Ordner <code>eingang</code>.</li>
     <li>Die Liste der Vorgänge aktualisiert sich nicht von selbst: Seite neu laden.</li>
   </ul>
@@ -133,6 +137,15 @@
   <details><summary>Eine Seite wurde dem falschen Blatt zugeordnet.</summary><div>
     Auf der Seite oben bei „Blatt:“ das richtige auswählen. Meist war der gedruckte Titel abgeschnitten oder stark
     verschmutzt.</div></details>
+
+  <details><summary>Ein Stapel wurde falsch getrennt – Seiten stehen im falschen Vorgang.</summary><div>
+    Das passiert, wenn ein Abrechnungsbogen fehlt oder an der falschen Stelle im Stapel lag: dann landen die Blätter
+    der einen Veranstaltung bei der vorherigen. Auf der falschen Seite unten „Seite gehört zu einer anderen
+    Veranstaltung?“ öffnen und den Ziel-Vorgang wählen – Vorgänge aus demselben Scan stehen oben. Mit „neuer Vorgang“
+    und „mit allen folgenden Seiten“ wird der Stapel ab dieser Seite abgetrennt. Erkannte und geprüfte Werte wandern mit;
+    gibt es ein Blatt im Ziel schon (z. B. einen zweiten Abrechnungsbogen), kommt die Seite ohne Blatt an und wird oben
+    bei „Blatt:“ zugeordnet – ihre Werte bleiben so lange aufbewahrt. Die Seite, die das Blatt vorher hatte, behält ihre
+    Werte ebenfalls. Ein Vorgang, der dadurch leer wird, verschwindet.</div></details>
 
   <details><summary>Woher kommt die Teilnehmeranzahl beim Tagegeld?</summary><div>
     Die App zählt die Unterschriften auf dem Tagegeld-Blatt, ersatzweise die Namen auf der Teilnehmerliste, und trägt

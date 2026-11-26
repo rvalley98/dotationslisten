@@ -35,6 +35,8 @@ table.t td { padding:3px 4px; border:0; } table.t th { padding:3px 4px; }
   {% endfor %}
 </nav>
 
+{% if belegt %}<p class="card small warn">Verschoben. Diese Blätter gab es hier schon, die Seiten sind deshalb noch keinem Blatt zugeordnet: {{ belegt }}. Ihre Werte bleiben aufbewahrt – oben bei „Blatt“ zuordnen.</p>{% endif %}
+
 <div class="split {{ '' if page.image else 'noscan' }}">
   {% if page.image %}
   <div class="scan" id="scan"><img src="/vorgang/{{ job.id }}/bild/{{ page.n }}" alt="Scan Seite {{ page.n }}" onclick="this.parentNode.classList.toggle('zoom')"></div>
@@ -51,6 +53,7 @@ table.t td { padding:3px 4px; border:0; } table.t th { padding:3px 4px; }
           {% endfor %}
         </select>
       </form>
+      {% if kept and not page.sheet %}<p class="small warn">Diese Seite hat aufbewahrte Werte (Blatt {{ kept }}). Wird sie wieder einem solchen Blatt zugeordnet, sind sie zurück.</p>{% endif %}
       {% if page.recog == 'offen' %}<p class="small warn">Wartet auf die Erkennung. Du kannst trotzdem schon von Hand eintragen.</p>{% endif %}
       {% if page.recog == 'fehler' %}<p class="small err">Erkennung fehlgeschlagen: {{ page.recog_error }}</p>{% endif %}
       {% if page.recog == 'fertig' and not reviewed %}<p class="small muted">Vom Modell gelesen{% if page.recog_seconds %} ({{ page.recog_seconds }} s){% endif %} – bitte mit dem Scan vergleichen und speichern.</p>{% endif %}
@@ -116,6 +119,27 @@ table.t td { padding:3px 4px; border:0; } table.t th { padding:3px 4px; }
         <span class="small muted">zum Ausfüllen von Hand</span>
       </form>
     </div>
+    {% endif %}
+
+    {% if can_move %}
+    <details class="card" id="verschieben">
+      <summary class="small" style="cursor:pointer">Seite gehört zu einer anderen Veranstaltung?</summary>
+      <form method="post" action="/vorgang/{{ job.id }}/seite/{{ page.n }}/verschieben" style="margin-top:8px">
+        <div class="row">
+          <span class="small muted">Verschieben nach</span>
+          <select name="ziel" style="width:auto">
+            <option value="">neuer Vorgang</option>
+            {% for t in move_targets %}
+            <option value="{{ t.id }}">{{ t.title }}{% if t.same %} – gleicher Scan{% endif %}{% if t.detail %}, {{ t.detail }}{% endif %} ({{ t.pages }} Seite{{ '' if t.pages == 1 else 'n' }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <label class="small" style="display:block; margin:6px 0"><input type="checkbox" name="folgende" value="1"> mit allen folgenden Seiten dieses Vorgangs</label>
+        <button class="small">Verschieben</button>
+        <p class="small muted" style="margin:6px 0 0">Erkannte und geprüfte Werte wandern mit. Ein Vorgang ohne Seiten wird gelöscht.
+          Mit „neuer Vorgang“ und „folgende Seiten“ lässt sich ein falsch getrennter Stapel ab dieser Seite abtrennen.</p>
+      </form>
+    </details>
     {% endif %}
 
     <div class="card" id="export">

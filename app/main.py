@@ -280,8 +280,28 @@ def page_view(request: Request, job_id: str, n: int):
         "reviewed": sheet is not None and sheet.key in job["reviewed"],
         "next_n": next((p["n"] for p in job["pages"] if p["n"] > n and p.get("sheet")), None),
         "sheets_by_key": F.SHEETS_BY_KEY, "free_sheets": J.free_sheets(job),
+        "move_targets": _move_targets(job), "belegt": request.query_params.get("belegt"),
+        "can_move": not J.is_import(job),
+        "kept": P.KIND_LABELS.get(page["kept"]["base"], page["kept"]["base"]) if page.get("kept") else None,
     }
     return templates.TemplateResponse(request, "page.html", ctx)
+
+
+def _move_targets(job: dict[str, Any]) -> list[dict[str, Any]]:
+    """Other Vorgänge a page can go to - those from the same scan first."""
+    if J.is_import(job):
+        return []
+    out = []
+    for j in J.all_jobs():
+        if j["id"] == job["id"] or J.is_import(j):
+            continue
+        scan = sorted(p["source_page"] for p in j["pages"] if p.get("source_page"))
+        same = bool(job.get("source_hash")) and j.get("source_hash") == job.get("source_hash")
+        # right after scanning a stack all its Vorgänge are called like the file: the scan pages tell them apart
+        detail = (f"Scan-Seite {scan[0]}" if len(scan) == 1 else f"Scan-Seiten {scan[0]}–{scan[-1]}") if scan else ""
+        out.append({"id": j["id"], "title": J.title(j), "same": same, "pages": len(j["pages"]), "detail": detail,
+                    "order": (not same, scan[0] if same and scan else 0)})
+    return sorted(out, key=lambda t: t["order"])
 
 
 @app.get("/vorgang/{job_id}/bild/{n}")
@@ -342,17 +362,44 @@ async def page_assign(request: Request, job_id: str, n: int):
     rec_enabled = state["recognizer"].enabled
 
     def apply(j):
-        _mark_stale(j)
-        for p in j["pages"]:
-            if new and p["n"] != n and p.get("sheet") == new:  # a sheet belongs to one page
-                p["sheet"], p["recog"] = None, J.R_SKIP
         p = _page(j, n)
-        p["sheet"] = new
-        p["recog"] = J.R_OPEN if (new and rec_enabled and p.get("image")) else J.R_SKIP
-        p["recog_error"] = None
+        if p.get("sheet") == new:
+            return
+        _mark_stale(j)
+        for other in j["pages"]:
+            if new and other["n"] != n and other.get("sheet") == new:  # a sheet belongs to one page
+                J.detach(j, other)
+        J.detach(j, p)
+        if new:
+            J.attach(j, p, new, rec_enabled)
 
     J.update(job_id, apply)
     return RedirectResponse(f"/vorgang/{job_id}/seite/{n}", 303)
+
+
+@app.post("/vorgang/{job_id}/seite/{n}/verschieben")
+async def page_move(request: Request, job_id: str, n: int):
+    """Move a page - optionally with all pages after it - into another or a new Vorgang
+    (a stack was split at the wrong place, or a Veranstaltungsabrechnung was missing)."""
+    form = await request.form()
+    target = str(form.get("ziel") or "") or None
+    job = _job(job_id)
+    numbers = [p["n"] for p in job["pages"] if p["n"] == n or (form.get("folgende") and p["n"] > n)]
+    try:
+        new_id, first, taken = J.move_pages(job_id, numbers, target)
+    except KeyError:
+        raise HTTPException(404, "Vorgang nicht gefunden")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    for jid in (job_id, new_id):
+        try:
+            J.update(jid, lambda j: None if "tagegeld" in j["reviewed"] or J.is_import(j) else rules.apply_teilnehmeranzahl(j["data"]))
+        except KeyError:  # the old Vorgang is gone (all its pages moved)
+            pass
+    url = f"/vorgang/{new_id}/seite/{first}"
+    if taken:
+        url += "?belegt=" + urllib.parse.quote(", ".join(taken))
+    return RedirectResponse(url, 303)
 
 
 @app.post("/vorgang/{job_id}/seite/{n}/erkennen")

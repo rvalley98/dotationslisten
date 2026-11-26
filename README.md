@@ -24,7 +24,8 @@ noch einmal, Zeile für Zeile, in den Verwendungsnachweis der Zuwendung.
 Die App nimmt dieses doppelte Abtippen ab:
 
 1. **Scannen.** Den ganzen Stapel einer Veranstaltung als PDF einscannen – Reihenfolge,
-   Leerseiten und auf dem Kopf liegende Blätter sind egal.
+   Leerseiten und auf dem Kopf liegende Blätter sind egal. Auch mehrere Veranstaltungen in einem
+   PDF gehen, wenn jede mit ihrem Abrechnungsbogen beginnt.
 2. **Erkennen.** Die App sortiert jede Seite dem richtigen Blatt zu (am gedruckten Titel) und
    liest auf Wunsch auch die Handschrift.
 3. **Prüfen.** Scan und Eingabefelder nebeneinander, Auffälliges ist rot markiert.
@@ -117,8 +118,12 @@ und Eingabefelder vorhanden sind. Gibt es eine neue Fassung der Vorlage, einfach
 
 Jede Seite wird ausgerichtet, Leerseiten werden übersprungen, und die Seite wird anhand des
 **gedruckten** Titels einem Blatt zugeordnet. Ein Stapel mit mehreren Veranstaltungsabrechnungen
-wird automatisch in mehrere Vorgänge getrennt. Eine falsch zugeordnete Seite lässt sich von Hand
-einem anderen Blatt zuweisen, ein fehlendes Blatt von Hand hinzufügen.
+wird automatisch in mehrere Vorgänge getrennt: Mit jedem Abrechnungsbogen beginnt ein neuer
+Vorgang. Jede Veranstaltung im Stapel muss deshalb mit ihrem Abrechnungsbogen anfangen, ihre
+übrigen Blätter folgen direkt dahinter. Eine falsch zugeordnete Seite lässt sich von Hand
+einem anderen Blatt zuweisen, ein fehlendes Blatt von Hand hinzufügen. Steht eine Seite im
+falschen Vorgang, lässt sie sich – auf Wunsch mit allen folgenden Seiten – in einen anderen
+oder einen neuen Vorgang verschieben; erkannte und geprüfte Werte wandern mit.
 
 ### 3. Erkennen und prüfen
 

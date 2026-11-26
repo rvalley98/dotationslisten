@@ -40,6 +40,13 @@ def apply_result(job: dict[str, Any], n: int, result: dict[str, Any]) -> None:
         rules.apply_teilnehmeranzahl(job["data"])
 
 
+def _update(job_id: str, fn) -> None:
+    try:
+        J.update(job_id, fn)
+    except KeyError:  # Vorgang removed meanwhile (all its pages moved elsewhere)
+        pass
+
+
 def recognize_one(rec: Recognizer) -> bool:
     """Returns True if a page was processed."""
     nxt = next_open_page()
@@ -49,6 +56,7 @@ def recognize_one(rec: Recognizer) -> bool:
     job = J.load(job_id)
     page = next(p for p in job["pages"] if p["n"] == n)
     sheet = F.SHEETS_BY_KEY[page["sheet"]]
+    image_name = page["image"]
     with Image.open(J.job_dir(job_id) / page["image"]) as im:
         image = im.convert("RGB")
     started = time.monotonic()
@@ -60,10 +68,11 @@ def recognize_one(rec: Recognizer) -> bool:
         log.exception("Erkennung fehlgeschlagen: %s Seite %s", job_id, n)
 
         def fail(j):
-            pg = next(p for p in j["pages"] if p["n"] == n)
-            pg["recog"], pg["recog_error"] = J.R_ERROR, str(e)[:300]
+            pg = next((p for p in j["pages"] if p.get("image") == image_name), None)
+            if pg is not None:
+                pg["recog"], pg["recog_error"] = J.R_ERROR, str(e)[:300]
 
-        J.update(job_id, fail)
+        _update(job_id, fail)
         return True
     if sheet.key == "tagegeld":
         try:
@@ -75,12 +84,13 @@ def recognize_one(rec: Recognizer) -> bool:
     log.info("%s Seite %s (%s) erkannt in %.0fs", job_id, n, sheet.name, time.monotonic() - started)
 
     def done(j):
-        pg = next(p for p in j["pages"] if p["n"] == n)
-        if pg.get("recog") == J.R_OPEN and pg.get("sheet") == sheet.key:  # not reassigned meanwhile
-            apply_result(j, n, result)
+        # the page may have been moved into another Vorgang or reassigned meanwhile
+        pg = next((p for p in j["pages"] if p.get("image") == image_name), None)
+        if pg is not None and pg.get("recog") == J.R_OPEN and pg.get("sheet") == sheet.key:
+            apply_result(j, pg["n"], result)
             pg["recog_seconds"] = round(time.monotonic() - started)
 
-    J.update(job_id, done)
+    _update(job_id, done)
     return True
 
 
