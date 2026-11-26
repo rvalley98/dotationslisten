@@ -24,6 +24,7 @@ VN_DIR = DATA_DIR / "verwendungsnachweis"
 VN_BASIS = VN_DIR / "basis.xlsx"    # the year's Verwendungsnachweis as filled so far (uploaded)
 VN_STAND = VN_DIR / "stand.json"    # result of the last calculation
 VN_SETTINGS = VN_DIR / "einstellungen.json"  # Zuwendung / Mindestanteil set in the app
+VN_RAUMKOSTEN = VN_DIR / "raumkosten.json"  # Raumkosten changed in the app (app/raumkosten.py)
 
 # Notice about new releases (GitHub releases API, once a day)
 UPDATE_CHECK = os.environ.get("UPDATE_CHECK", "1") != "0"

@@ -22,6 +22,7 @@ import openpyxl
 from . import config as C
 from . import formulas as F
 from . import jobs as J
+from . import raumkosten as RK
 from . import workbook as W
 
 FIRST_ROW, LAST_ROW = 82, 559
@@ -89,6 +90,7 @@ LAYOUT = {
     ("Kosten", "I1"): "Gesamt",
     ("Kosten", "J1"): "Anteil",
 }
+LAYOUT.update(RK.LAYOUT)
 DEFAULT_MINDESTANTEIL = 0.6
 
 
@@ -201,6 +203,9 @@ def generate(rows: list[dict[str, Any]], dst: Path) -> dict[str, Any]:
     wb = openpyxl.load_workbook(C.VN_BASIS)
     st = settings()
     _apply_settings(wb, st)
+    raeume = RK.saved()
+    if raeume is not None:
+        RK.write(wb, raeume)
     ws = wb["Kosten"]
     existing = _existing(ws)
     written, skipped = [], []
@@ -222,10 +227,12 @@ def generate(rows: list[dict[str, Any]], dst: Path) -> dict[str, Any]:
         written.append({"id": e["id"], "row": row})
         row += 1
     W._save(wb, dst)
-    v = W.calculate(dst, [f"Verwendungsnachweis!{c}" for c in SUMMARY.values()])
+    v = W.calculate(dst, [f"Verwendungsnachweis!{c}" for c in SUMMARY.values()] + RK.refs())
     return {
         "summary": {k: _plain(v[f"Verwendungsnachweis!{c}"]) for k, c in SUMMARY.items()},
         "einstellungen": st,
+        "raumkosten": raeume,
+        "raumkosten_kosten": {r: _plain(v[r]) for r in RK.refs()},
         "written": written,
         "skipped": skipped,
     }
@@ -252,7 +259,8 @@ def stand() -> dict[str, Any] | None:
 
 
 def is_outdated(st: dict[str, Any], info: dict[str, Any] | None, rows: list[dict[str, Any]]) -> bool:
-    if not info or st.get("basis") != info["geaendert"] or st.get("einstellungen") != settings():
+    if not info or st.get("basis") != info["geaendert"] or st.get("einstellungen") != settings() \
+            or st.get("raumkosten") != RK.saved():
         return True
     current = {e["id"]: (J.load(e["id"]).get("export") or {}).get("at") for e in rows if e["status"] == FINAL}
     return current != st.get("exports")

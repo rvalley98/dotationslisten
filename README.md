@@ -170,6 +170,14 @@ die Aufteilung der Ausgaben mit Markierungen für die Zuwendung und den Mindesta
 **Einstellbar** sind die Höhe der Zuwendung und der Mindestanteil Ausbildung + Übung
 (voreingestellt 60 %); beides wird in die erzeugte Datei übernommen.
 
+**Raumkosten (Verwaltung):** Die Verwaltungskosten kommen aus dem Blatt „Raumkosten“ – bis zu
+10 Gebäude mit je 8 Räumen, jeder Raum mit Nutzungsart (Verwaltung oder Ausbildung), Größe, Miete
+pro qm und KatS-Anteil. Die App liest diese Werte aus der hochgeladenen Datei und zeigt sie
+mit den berechneten Kosten je Raum. Sie lassen sich dort bearbeiten; „Speichern & neu berechnen“
+schreibt sie in die neue Datei, die hochgeladene bleibt unverändert. „Werte aus der Datei
+übernehmen“ macht die Änderungen rückgängig. Wird ein neuer Verwendungsnachweis hochgeladen,
+gelten dessen Raumkosten.
+
 Die App kennt die Zellpositionen genau dieses Formulars. Beim Hochladen prüft sie den Aufbau; ein
 anderes Formular wird mit Hinweis abgelehnt, statt falsche Zahlen zu liefern.
 

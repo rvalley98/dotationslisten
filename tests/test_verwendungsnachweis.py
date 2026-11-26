@@ -7,6 +7,7 @@ import openpyxl
 import pytest
 
 from app import config as C
+from app import raumkosten as RK
 from app import verwendungsnachweis as VN
 from app import workbook as W
 
@@ -16,6 +17,7 @@ def basis(tmp_path, monkeypatch, vn_xlsx):
     monkeypatch.setattr(C, "VN_BASIS", tmp_path / "basis.xlsx")
     monkeypatch.setattr(C, "VN_DIR", tmp_path)
     monkeypatch.setattr(C, "VN_SETTINGS", tmp_path / "einstellungen.json")
+    monkeypatch.setattr(C, "VN_RAUMKOSTEN", tmp_path / "raumkosten.json")
     shutil.copy(vn_xlsx, C.VN_BASIS)
     return C.VN_BASIS
 
@@ -93,3 +95,43 @@ def test_entry_status():
     assert VN.entry(job, 2025)["status"] == "nicht aus 2025"
     job["export"]["veraltet"] = True
     assert VN.entry(job, 2026)["status"].startswith("nach dem Export geändert")
+
+
+def test_raumkosten_edited_in_the_app(basis, tmp_path):
+    """A Verwaltung room (Gebäude 1, Raum 1): its KatS share changes the Verwaltung line; the
+    uploaded file stays as it is; reset = the values of the file again."""
+    out = tmp_path / "vn.xlsx"
+    start = VN.generate([], out)
+    raeume = RK.current()
+    assert raeume == RK.read(openpyxl.load_workbook(basis)) and RK.saved() is None
+
+    raeume[0]["raeume"][0].update(raum="Büro", nutzung="Verwaltung", groesse=10.0, miete_qm=5.0, anteil=1.0)
+    raeume[0]["flaeche"] = raeume[0]["flaeche"] or 100.0
+    old = start["raumkosten_kosten"][RK.room_ref(0, 0)] or 0
+    RK.save(raeume)
+    res = VN.generate([], out)
+    room = res["raumkosten_kosten"][RK.room_ref(0, 0)]
+    assert room == pytest.approx(10 * 5 * 12 + (raeume[0]["nebenkosten"] or 0) * 10 / raeume[0]["flaeche"])
+    assert res["summary"]["verwaltung"] == pytest.approx((start["summary"]["verwaltung"] or 0) - old + room)
+    assert RK.read(openpyxl.load_workbook(basis)) != raeume  # basis unchanged
+
+    RK.reset()
+    assert VN.generate([], out)["summary"]["verwaltung"] == pytest.approx(start["summary"]["verwaltung"] or 0)
+
+
+def test_raumkosten_form_round_trip_and_checks():
+    raeume = [{k: None for k, *_ in RK.GEBAEUDE_FIELDS} | {"raeume": [{k: None for k, *_ in RK.RAUM_FIELDS}
+                                                               for _ in range(RK.RAEUME)]} for _ in range(RK.GEBAEUDE)]
+    raeume[0].update(anschrift="Musterweg 1", besitz="Gemietet", flaeche=100.0, miete=250.0)
+    raeume[0]["raeume"][0].update(raum="Büro", nutzung="Verwaltung", groesse=12.5, miete_qm=2.5, anteil=0.3)
+    form = {}
+    for g in RK.form_view(raeume):
+        form.update({f"g{g['n']}_{k}": g[k] for k, *_ in RK.GEBAEUDE_FIELDS})
+        for r in g["raeume"]:
+            form.update({f"g{g['n']}_r{r['n']}_{k}": r[k] for k, *_ in RK.RAUM_FIELDS})
+    assert form["g0_r0_anteil"] == "30" and form["g0_r0_groesse"] == "12,5"
+    assert RK.from_form(form) == raeume
+    for key, value, msg in [("g0_r0_nutzung", "", "Nutzungsart fehlt"), ("g0_flaeche", "", "Gesamtfläche"),
+                            ("g0_r0_anteil", "120", "höchstens 100"), ("g0_r0_groesse", "zwölf", "keine Zahl")]:
+        with pytest.raises(ValueError, match=msg):
+            RK.from_form(form | {key: value})
