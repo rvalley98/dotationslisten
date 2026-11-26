@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import copy
+import platform
+import urllib.parse
 import json
 import logging
 import threading
@@ -81,6 +83,11 @@ templates.env.filters["datum"] = _datum
 templates.env.filters["eur"] = _eur
 templates.env.filters["pct"] = _pct
 templates.env.globals["version"] = C.VERSION
+# "Fehler melden": a GitHub issue with version and system filled in - no Abrechnung data
+templates.env.globals["bug_url"] = C.BUG_PAGE + "?" + urllib.parse.urlencode({"body": (
+    "**Was ist passiert?**\n\n\n**Was hätte passieren sollen?**\n\n\n**Schritte dorthin**\n1. \n\n"
+    "_Bitte keine Namen, IBANs oder Abrechnungen anhängen._\n\n"
+    f"Version {C.VERSION} · {platform.system()} {platform.release()} · {platform.machine()}")})
 
 
 def _status() -> dict[str, Any]:
@@ -526,7 +533,7 @@ def vn_view(request: Request):
     return _vn_page(request)
 
 
-def _vn_page(request: Request, rk_form: Any = None, rk_error: str | None = None):
+def _vn_page(request: Request):
     info = VN.basis_info()
     rows = VN.entries(info["jahr"] if info else None)
     st = VN.stand()
@@ -534,18 +541,34 @@ def _vn_page(request: Request, rk_form: Any = None, rk_error: str | None = None)
            "settings": VN.settings(), "chart": _vn_chart(st["summary"]) if st else None,
            "outdated": st is not None and VN.is_outdated(st, info, rows),
            "written": {w["id"]: w["row"] for w in (st or {}).get("written", [])},
-           "skipped": set((st or {}).get("skipped", []))}
-    raeume = RK.current() if info else None
-    ctx["raumkosten"] = RK.form_view(raeume, (st or {}).get("raumkosten_kosten")) if raeume else None
-    if rk_form is not None:  # input error: show what was typed, with the message
-        ctx["raumkosten"], ctx["rk_error"] = RK.raw_view(rk_form), rk_error
-    ctx["raumkosten_eigen"] = RK.saved() is not None
-    ctx["rk_nutzung"], ctx["rk_besitz"] = RK.NUTZUNG, RK.BESITZ
+           "skipped": set((st or {}).get("skipped", [])),
+           "raumkosten_eigen": RK.saved() is not None}
     return templates.TemplateResponse(request, "verwendungsnachweis.html", ctx)
 
 
-@app.post("/verwendungsnachweis/raumkosten")
-async def vn_raumkosten(request: Request):
+@app.get("/raumkosten")
+def rk_view(request: Request):
+    return _rk_page(request)
+
+
+def _rk_page(request: Request, rk_form: Any = None, rk_error: str | None = None):
+    """Raum- und Verwaltungskosten: the Raumkosten sheet of the Verwendungsnachweis, editable."""
+    info = VN.basis_info()
+    st = VN.stand()
+    raeume = RK.current() if info else None
+    kosten = (st or {}).get("raumkosten_kosten") or {}
+    ctx = {"status": _status(), "info": info, "stand": st, "rk_error": rk_error,
+           "outdated": st is not None and VN.is_outdated(st, info, VN.entries(info["jahr"] if info else None)),
+           "raumkosten": RK.form_view(raeume, kosten) if raeume else None,
+           "raumkosten_eigen": RK.saved() is not None, "rk_nutzung": RK.NUTZUNG, "rk_besitz": RK.BESITZ,
+           "anteile": RK.totals(raeume, kosten) if raeume and kosten else None}
+    if rk_form is not None:  # input error: show what was typed, with the message
+        ctx["raumkosten"] = RK.raw_view(rk_form)
+    return templates.TemplateResponse(request, "raumkosten.html", ctx)
+
+
+@app.post("/raumkosten")
+async def rk_save(request: Request):
     """Save the Raumkosten edited in the app and recalculate (so the amounts are current)."""
     if not C.VN_BASIS.exists():
         raise HTTPException(409, "Erst den Verwendungsnachweis hochladen")
@@ -553,18 +576,19 @@ async def vn_raumkosten(request: Request):
     try:
         RK.save(RK.from_form(form))
     except ValueError as e:
-        response = await run_in_threadpool(_vn_page, request, form, str(e))
+        response = await run_in_threadpool(_rk_page, request, form, str(e))
         response.status_code = 400
         return response
-    return await run_in_threadpool(vn_calculate, "raumkosten")
+    await run_in_threadpool(_vn_calculate)
+    return RedirectResponse("/raumkosten", 303)
 
 
-@app.post("/verwendungsnachweis/raumkosten/zuruecksetzen")
-def vn_raumkosten_reset():
+@app.post("/raumkosten/zuruecksetzen")
+def rk_reset():
     RK.reset()
     if C.VN_BASIS.exists():
-        return vn_calculate(anchor="raumkosten")
-    return RedirectResponse("/verwendungsnachweis#raumkosten", 303)
+        _vn_calculate()
+    return RedirectResponse("/raumkosten", 303)
 
 
 @app.post("/verwendungsnachweis/basis")
@@ -585,14 +609,18 @@ async def vn_basis(file: UploadFile):
 
 
 @app.post("/verwendungsnachweis/berechnen")
-def vn_calculate(anchor: str = ""):
+def vn_calculate():
+    _vn_calculate()
+    return RedirectResponse("/verwendungsnachweis", 303)
+
+
+def _vn_calculate() -> None:
     try:
         VN.calculate()
     except FileNotFoundError:
         raise HTTPException(409, "Erst den Verwendungsnachweis hochladen")
     except (ValueError, RuntimeError) as e:
         raise HTTPException(400, str(e))
-    return RedirectResponse("/verwendungsnachweis" + (f"#{anchor}" if anchor else ""), 303)
 
 
 def _number(text: Any) -> float | None:

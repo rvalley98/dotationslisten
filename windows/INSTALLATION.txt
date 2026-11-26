@@ -85,5 +85,6 @@ Probleme
   das Startmenü neu starten.
 - „… ist noch geöffnet“: die Excel-Datei in Excel schließen und erneut erzeugen.
 - Fehler: Taskleisten-Symbol → „Protokoll anzeigen“.
+- Fehler melden: Link „Fehler melden“ unten in der App (öffnet ein Formular auf GitHub).
 
 Unterstützen: https://buymeacoffee.com/rvalley98

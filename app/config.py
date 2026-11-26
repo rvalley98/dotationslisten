@@ -31,6 +31,7 @@ UPDATE_CHECK = os.environ.get("UPDATE_CHECK", "1") != "0"
 UPDATE_REPO = os.environ.get("UPDATE_REPO", "rvalley98/dotationslisten")
 UPDATE_URL = f"https://api.github.com/repos/{UPDATE_REPO}/releases/latest"
 UPDATE_PAGE = f"https://github.com/{UPDATE_REPO}/releases/latest"
+BUG_PAGE = f"https://github.com/{UPDATE_REPO}/issues/new"  # "Fehler melden"
 
 # Recognition: "ollama" or "none" (manual entry only)
 RECOGNIZER = os.environ.get("RECOGNIZER", "ollama")

@@ -27,6 +27,7 @@ APP_NAME = "Dotationslisten"
 PORT = int(os.environ.get("DOTATIONSLISTEN_PORT", "8765"))
 URL = f"http://127.0.0.1:{PORT}"
 COFFEE = "https://buymeacoffee.com/rvalley98"
+BUGS = "https://github.com/rvalley98/dotationslisten/issues/new"
 WINDOWS = sys.platform == "win32"
 
 if WINDOWS:
@@ -368,7 +369,7 @@ def run_menu_mac() -> None:
             super().__init__(APP_NAME, icon=str(icon) if icon.exists() else None, template=True,
                              title=None if icon.exists() else "DL", quit_button=None)
             self.menu = ["Öffnen", "Datenordner im Finder zeigen", "Datenordner ändern …", None,
-                         "☕ Unterstützen", "Protokoll anzeigen", None, "Beenden"]
+                         "🐞 Fehler melden", "☕ Unterstützen", "Protokoll anzeigen", None, "Beenden"]
 
         @rumps.clicked("Öffnen")
         def _open(self, _):
@@ -381,6 +382,10 @@ def run_menu_mac() -> None:
         @rumps.clicked("Datenordner ändern …")
         def _change(self, _):
             change_data(rumps.quit_application)
+
+        @rumps.clicked("🐞 Fehler melden")
+        def _bugs(self, _):
+            webbrowser.open(BUGS)
 
         @rumps.clicked("☕ Unterstützen")
         def _coffee(self, _):
@@ -416,6 +421,7 @@ def run_menu_windows() -> None:
         pystray.MenuItem("Datenordner im Explorer zeigen", lambda *_: show_data()),
         pystray.MenuItem("Datenordner ändern …", lambda *_: change_data(quit_app)),
         pystray.Menu.SEPARATOR,
+        pystray.MenuItem("🐞 Fehler melden", lambda *_: webbrowser.open(BUGS)),
         pystray.MenuItem("☕ Unterstützen", lambda *_: webbrowser.open(COFFEE)),
         pystray.MenuItem("Protokoll anzeigen", lambda *_: show_log()),
         pystray.Menu.SEPARATOR,

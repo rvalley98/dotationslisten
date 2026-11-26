@@ -63,7 +63,7 @@
     <tr><th>Ausgaben lt. Abrechnung</th><th style="text-align:right">Betrag</th><th style="text-align:right">v. H. der Zuwendung</th></tr>
     <tr><td>Übungen</td><td style="text-align:right">{{ s.uebungen|eur }}</td><td rowspan="2" style="text-align:right;vertical-align:middle">{{ s.anteil_ua|pct }}</td></tr>
     <tr><td>Ausbildung</td><td style="text-align:right">{{ s.ausbildung|eur }}</td></tr>
-    <tr><td>Verwaltung</td><td style="text-align:right">{{ s.verwaltung|eur }}</td><td style="text-align:right">{{ s.anteil_verwaltung|pct }}</td></tr>
+    <tr><td>Verwaltung <a class="small" href="/raumkosten">(Raumkosten bearbeiten)</a></td><td style="text-align:right">{{ s.verwaltung|eur }}</td><td style="text-align:right">{{ s.anteil_verwaltung|pct }}</td></tr>
     <tr><th>Insgesamt</th><th style="text-align:right">{{ s.insgesamt|eur }}</th><td></td></tr>
     <tr><td class="muted">Zuwendung / Eigenanteil</td><td style="text-align:right" class="muted">{{ s.zuwendung|eur }} / {{ s.eigenanteil|eur }}</td><td></td></tr>
   </table>
@@ -98,57 +98,6 @@
 </div>
 {% endif %}
 
-{% if raumkosten %}
-<div class="card" id="raumkosten">
-  <div class="row" style="justify-content:space-between">
-    <h2 style="margin:0">Raumkosten (Verwaltung und Schulungsräume)</h2>
-    {% if raumkosten_eigen %}
-    <form method="post" action="/verwendungsnachweis/raumkosten/zuruecksetzen" class="row">
-      <span class="tag warn">in der App geändert</span><button class="small">Werte aus der Datei übernehmen</button>
-    </form>
-    {% else %}<span class="tag">wie in der hochgeladenen Datei</span>{% endif %}
-  </div>
-  <p class="small muted">Aus dem Blatt „Raumkosten“: Jeder Raum zählt mit seinem KatS-Anteil zur Verwaltung oder zur Ausbildung.
-    Kosten pro Raum = Größe × Miete pro qm × 12 + Anteil an den Nebenkosten, davon der KatS-Anteil.
-    Änderungen gelten nur für die neue Datei – die hochgeladene bleibt unverändert. Speichern rechnet neu.</p>
-  {% if rk_error %}<p class="err"><b>Nicht gespeichert:</b> {{ rk_error }}</p>{% endif %}
-  <form method="post" action="/verwendungsnachweis/raumkosten">
-  {% for g in raumkosten %}
-  <details {{ '' if g.leer else 'open' }} style="margin:10px 0">
-    <summary><b>Gebäude {{ g.n + 1 }}</b>{% if g.anschrift or g.ort %} – {{ g.anschrift }}{{ ', ' if g.anschrift and g.ort }}{{ g.ort }}{% elif g.leer %} <span class="muted small">(leer)</span>{% endif %}
-      {% if g.summe is number and not g.leer %}<span class="small muted"> · Kosten KatS {{ g.summe|eur }}</span>{% endif %}</summary>
-    <div class="row" style="gap:10px;margin:8px 0;align-items:flex-end">
-      <label class="small">Anschrift<br><input type="text" name="g{{ g.n }}_anschrift" value="{{ g.anschrift }}" style="width:14em"></label>
-      <label class="small">Ort<br><input type="text" name="g{{ g.n }}_ort" value="{{ g.ort }}" style="width:10em"></label>
-      <label class="small">Besitzverhältnis<br><select name="g{{ g.n }}_besitz" style="width:9em"><option value=""></option>
-        {% for o in rk_besitz %}<option {{ 'selected' if g.besitz == o }}>{{ o }}</option>{% endfor %}</select></label>
-      <label class="small">Gesamtfläche (qm)<br><input type="text" inputmode="decimal" name="g{{ g.n }}_flaeche" value="{{ g.flaeche }}" style="width:6em"></label>
-      <label class="small">Miete pro Monat (€)<br><input type="text" inputmode="decimal" name="g{{ g.n }}_miete" value="{{ g.miete }}" style="width:7em"></label>
-      <label class="small">Nebenkosten im Jahr (€)<br><input type="text" inputmode="decimal" name="g{{ g.n }}_nebenkosten" value="{{ g.nebenkosten }}" style="width:7em"></label>
-      {% if g.miete_qm %}<span class="small muted">= {{ g.miete_qm }} € pro qm</span>{% endif %}
-    </div>
-    <div style="overflow-x:auto">
-    <table>
-      <tr><th>Raum</th><th>Nutzungsart</th><th>Größe (qm)</th><th>Miete pro qm (€/Monat)</th><th>Anteil KatS (%)</th><th style="text-align:right">Kosten KatS</th></tr>
-      {% for r in g.raeume %}
-      <tr>
-        <td><input type="text" name="g{{ g.n }}_r{{ r.n }}_raum" value="{{ r.raum }}"></td>
-        <td><select name="g{{ g.n }}_r{{ r.n }}_nutzung"><option value=""></option>
-          {% for o in rk_nutzung %}<option {{ 'selected' if r.nutzung == o }}>{{ o }}</option>{% endfor %}</select></td>
-        <td><input type="text" inputmode="decimal" name="g{{ g.n }}_r{{ r.n }}_groesse" value="{{ r.groesse }}" style="width:6em"></td>
-        <td><input type="text" inputmode="decimal" name="g{{ g.n }}_r{{ r.n }}_miete_qm" value="{{ r.miete_qm }}" placeholder="{{ g.miete_qm }}" style="width:6em"></td>
-        <td><input type="text" inputmode="decimal" name="g{{ g.n }}_r{{ r.n }}_anteil" value="{{ r.anteil }}" style="width:5em"></td>
-        <td style="text-align:right" class="small">{{ r.kosten|eur if r.kosten is number and (r.raum or r.groesse) else '' }}</td>
-      </tr>
-      {% endfor %}
-    </table>
-    </div>
-  </details>
-  {% endfor %}
-  <button class="primary">Speichern &amp; neu berechnen</button>
-  </form>
-</div>
-{% endif %}
 
 <div class="card">
   <h2 style="margin-top:0">Vorgänge</h2>

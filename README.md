@@ -172,8 +172,8 @@ die Aufteilung der Ausgaben mit Markierungen für die Zuwendung und den Mindesta
 
 **Raumkosten (Verwaltung):** Die Verwaltungskosten kommen aus dem Blatt „Raumkosten“ – bis zu
 10 Gebäude mit je 8 Räumen, jeder Raum mit Nutzungsart (Verwaltung oder Ausbildung), Größe, Miete
-pro qm und KatS-Anteil. Die App liest diese Werte aus der hochgeladenen Datei und zeigt sie
-mit den berechneten Kosten je Raum. Sie lassen sich dort bearbeiten; „Speichern & neu berechnen“
+pro qm und KatS-Anteil. Die App liest diese Werte aus der hochgeladenen Datei und zeigt sie im
+Reiter **„Raum- & Verwaltungskosten“** mit den berechneten Kosten je Raum. Sie lassen sich dort bearbeiten; „Speichern & neu berechnen“
 schreibt sie in die neue Datei, die hochgeladene bleibt unverändert. „Werte aus der Datei
 übernehmen“ macht die Änderungen rückgängig. Wird ein neuer Verwendungsnachweis hochgeladen,
 gelten dessen Raumkosten.
@@ -226,6 +226,9 @@ zwei gleichzeitig am selben Vorgang, können Änderungen des einen verloren gehe
 - **Protokoll:** Menü „Protokoll anzeigen“ (Mac: `~/Library/Logs/Dotationslisten/app.log`,
   Windows: `%LOCALAPPDATA%\Dotationslisten\Logs\app.log`; daneben `ollama.log`) – bei Fehlermeldungen hilft es, den
   Inhalt mitzuschicken (vorher auf Namen/IBANs prüfen).
+- **Fehler melden:** Link „🐞 Fehler melden“ unten auf jeder Seite oder im Menü des Symbols. Er öffnet
+  ein GitHub-Formular, in dem Version und Betriebssystem schon eingetragen sind (GitHub-Konto nötig).
+  Keine Namen, IBANs oder Abrechnungen anhängen.
 
 ## Entwicklung
 

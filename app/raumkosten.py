@@ -219,3 +219,14 @@ def raw_view(form: Any) -> list[dict[str, Any]]:
         leer = not any(geb.values()) and not any(v for raum in raeume for k, v in raum.items() if k not in ("n", "kosten"))
         out.append({"n": g, "leer": leer, **geb, "miete_qm": "", "summe": None, "raeume": raeume})
     return out
+
+
+def totals(gebaeude: list[dict[str, Any]], kosten: dict[str, Any]) -> dict[str, float]:
+    """Kosten KatS of all rooms per Nutzungsart (from the last calculation)."""
+    out = {n: 0.0 for n in NUTZUNG}
+    for g, geb in enumerate(gebaeude):
+        for r, raum in enumerate(geb.get("raeume") or []):
+            v = kosten.get(room_ref(g, r))
+            if raum.get("nutzung") in out and isinstance(v, (int, float)):
+                out[raum["nutzung"]] += v
+    return out

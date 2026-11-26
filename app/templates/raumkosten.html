@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="card">
+  <h1 style="margin-top:0">Raum- &amp; Verwaltungskosten{% if info %} {{ info.jahr }}{% endif %}</h1>
+  {% if not info %}
+  <p>Noch kein Verwendungsnachweis hinterlegt. Die Raumkosten stehen im Blatt „Raumkosten“ der Datei des Jahres –
+    erst unter <a href="/verwendungsnachweis">Verwendungsnachweis</a> hochladen.</p>
+  {% else %}
+  <p class="small muted">Die Verwaltungskosten des Verwendungsnachweises sind die Räume mit der Nutzungsart „Verwaltung“
+    (Blatt „Raumkosten“), jeweils mit ihrem KatS-Anteil; Schulungsräume („Ausbildung“) zählen zur Ausbildung.
+    Grundlage: hochgeladener Verwendungsnachweis ({{ info.gliederung }}).</p>
+  {% if stand %}{% set s = stand.summary %}
+  <table style="max-width:560px">
+    <tr><th>Kosten KatS</th><th style="text-align:right">Betrag</th></tr>
+    {% if anteile %}
+    <tr><td>Räume Verwaltung</td><td style="text-align:right">{{ anteile.Verwaltung|eur }}</td></tr>
+    {% set weitere = (s.verwaltung or 0) - anteile.Verwaltung %}
+    {% if weitere > 0.005 or weitere < -0.005 %}<tr><td>weitere Verwaltungskosten aus dem Kostenblatt</td><td style="text-align:right">{{ weitere|eur }}</td></tr>{% endif %}
+    {% endif %}
+    <tr><th>Verwaltung insgesamt</th><th style="text-align:right">{{ s.verwaltung|eur }}</th></tr>
+    <tr><td class="muted">Anteil an der Zuwendung</td><td style="text-align:right" class="muted">{{ s.anteil_verwaltung|pct }}</td></tr>
+    {% if anteile %}<tr><td class="muted">Schulungsräume (zählen zur Ausbildung)</td><td style="text-align:right" class="muted">{{ anteile.Ausbildung|eur }}</td></tr>{% endif %}
+  </table>
+  <p class="small {{ 'warn' if outdated else 'muted' }}">Stand der Berechnung {{ stand.at.replace('T', ' ')[:16] }}{% if outdated %} – seitdem geändert, unter <a href="/verwendungsnachweis">Verwendungsnachweis</a> neu berechnen{% endif %}.</p>
+  {% else %}
+  <p class="small muted">Noch nicht berechnet – „Speichern &amp; neu berechnen“ unten oder unter <a href="/verwendungsnachweis">Verwendungsnachweis</a>.</p>
+  {% endif %}
+  {% endif %}
+</div>
+
+{% if raumkosten %}
+<div class="card" id="raumkosten">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">Raumkosten</h2>
+    {% if raumkosten_eigen %}
+    <form method="post" action="/raumkosten/zuruecksetzen" class="row">
+      <span class="tag warn">in der App geändert</span><button class="small">Werte aus der Datei übernehmen</button>
+    </form>
+    {% else %}<span class="tag">wie in der hochgeladenen Datei</span>{% endif %}
+  </div>
+  <p class="small muted">Aus dem Blatt „Raumkosten“: Jeder Raum zählt mit seinem KatS-Anteil zur Verwaltung oder zur Ausbildung.
+    Kosten pro Raum = Größe × Miete pro qm × 12 + Anteil an den Nebenkosten, davon der KatS-Anteil.
+    Änderungen gelten nur für die neue Datei – die hochgeladene bleibt unverändert. Speichern rechnet neu.</p>
+  {% if rk_error %}<p class="err"><b>Nicht gespeichert:</b> {{ rk_error }}</p>{% endif %}
+  <form method="post" action="/raumkosten">
+  {% for g in raumkosten %}
+  <details {{ '' if g.leer else 'open' }} style="margin:10px 0">
+    <summary><b>Gebäude {{ g.n + 1 }}</b>{% if g.anschrift or g.ort %} – {{ g.anschrift }}{{ ', ' if g.anschrift and g.ort }}{{ g.ort }}{% elif g.leer %} <span class="muted small">(leer)</span>{% endif %}
+      {% if g.summe is number and not g.leer %}<span class="small muted"> · Kosten KatS {{ g.summe|eur }}</span>{% endif %}</summary>
+    <div class="row" style="gap:10px;margin:8px 0;align-items:flex-end">
+      <label class="small">Anschrift<br><input type="text" name="g{{ g.n }}_anschrift" value="{{ g.anschrift }}" style="width:14em"></label>
+      <label class="small">Ort<br><input type="text" name="g{{ g.n }}_ort" value="{{ g.ort }}" style="width:10em"></label>
+      <label class="small">Besitzverhältnis<br><select name="g{{ g.n }}_besitz" style="width:9em"><option value=""></option>
+        {% for o in rk_besitz %}<option {{ 'selected' if g.besitz == o }}>{{ o }}</option>{% endfor %}</select></label>
+      <label class="small">Gesamtfläche (qm)<br><input type="text" inputmode="decimal" name="g{{ g.n }}_flaeche" value="{{ g.flaeche }}" style="width:6em"></label>
+      <label class="small">Miete pro Monat (€)<br><input type="text" inputmode="decimal" name="g{{ g.n }}_miete" value="{{ g.miete }}" style="width:7em"></label>
+      <label class="small">Nebenkosten im Jahr (€)<br><input type="text" inputmode="decimal" name="g{{ g.n }}_nebenkosten" value="{{ g.nebenkosten }}" style="width:7em"></label>
+      {% if g.miete_qm %}<span class="small muted">= {{ g.miete_qm }} € pro qm</span>{% endif %}
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <tr><th>Raum</th><th>Nutzungsart</th><th>Größe (qm)</th><th>Miete pro qm (€/Monat)</th><th>Anteil KatS (%)</th><th style="text-align:right">Kosten KatS</th></tr>
+      {% for r in g.raeume %}
+      <tr>
+        <td><input type="text" name="g{{ g.n }}_r{{ r.n }}_raum" value="{{ r.raum }}"></td>
+        <td><select name="g{{ g.n }}_r{{ r.n }}_nutzung"><option value=""></option>
+          {% for o in rk_nutzung %}<option {{ 'selected' if r.nutzung == o }}>{{ o }}</option>{% endfor %}</select></td>
+        <td><input type="text" inputmode="decimal" name="g{{ g.n }}_r{{ r.n }}_groesse" value="{{ r.groesse }}" style="width:6em"></td>
+        <td><input type="text" inputmode="decimal" name="g{{ g.n }}_r{{ r.n }}_miete_qm" value="{{ r.miete_qm }}" placeholder="{{ g.miete_qm }}" style="width:6em"></td>
+        <td><input type="text" inputmode="decimal" name="g{{ g.n }}_r{{ r.n }}_anteil" value="{{ r.anteil }}" style="width:5em"></td>
+        <td style="text-align:right" class="small">{{ r.kosten|eur if r.kosten is number and (r.raum or r.groesse) else '' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    </div>
+  </details>
+  {% endfor %}
+  <button class="primary">Speichern &amp; neu berechnen</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

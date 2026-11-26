@@ -43,6 +43,7 @@ button.primary, .btn.primary { background:var(--accent); border-color:var(--acce
   <a class="home" href="/">Dotations<span>listen</span></a>
   <a href="/" class="small">Vorgänge</a>
   <a href="/verwendungsnachweis" class="small">Verwendungsnachweis</a>
+  <a href="/raumkosten" class="small">Raum- &amp; Verwaltungskosten</a>
   <div class="status">
     <span><i class="dot {{ 'ok' if status.template else 'err' }}"></i>Vorlage {{ 'bereit' if status.template else 'fehlt' }}</span>
     <span title="{{ status.recog_msg }}"><i class="dot {{ 'ok' if status.recog_ok else ('warn' if status.recog_enabled else '') }}"></i>{{ status.recog_msg }}{% if status.busy %} · {{ status.busy }}{% endif %}</span>
@@ -80,6 +81,7 @@ button.primary, .btn.primary { background:var(--accent); border-color:var(--acce
 </main>
 <footer class="small muted" style="text-align:center;padding:4px 0 18px">
   Dotationslisten {{ version }} · läuft lokal, keine Daten verlassen den Rechner ·
+  <a href="{{ bug_url }}" target="_blank" rel="noopener">🐞 Fehler melden</a> ·
   <a href="https://buymeacoffee.com/rvalley98" target="_blank" rel="noopener">☕ Unterstützen</a>
 </footer>
 </body>
